@@ -38,8 +38,20 @@ export default function App() {
   const [isOffMode, setIsOffMode] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'growth'>('dashboard');
 
-  // Simulated timezone hour config (for test AC-PB2-01 testing)
-  const [simulatedTime, setSimulatedTime] = useState<string>('09:30');
+  // Real-time local clock (for precise EOD boundary & tracking)
+  const [currentTime, setCurrentTime] = useState<string>(() => {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  });
+
+  // Keep local clock updated precisely every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const d = new Date();
+      setCurrentTime(`${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Modal Control States
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -308,20 +320,20 @@ export default function App() {
   }, [tasks]);
 
   // Is EOD closure currently available? (AC-PB2-01)
-  // Visible if NOT in Off Mode, AND either simulated Hour is after 17:00 (17:00 is min 1020) OR all active tasks are completed
+  // Visible if NOT in Off Mode, AND either current Hour is after 17:00 (17:00 is min 1020) OR all active tasks are completed
   const isClosureActionAvailable = useMemo(() => {
     if (isOffMode) return false;
     
-    // Check simulated hours
-    const [h, m] = simulatedTime.split(':').map(Number);
-    const minsSim = h * 60 + m;
-    const isPast17 = minsSim >= 17 * 60; // 17:00
+    // Check current local hours
+    const [h, m] = currentTime.split(':').map(Number);
+    const minsCurrent = h * 60 + m;
+    const isPast17 = minsCurrent >= 17 * 60; // 17:00
 
     // Check if any unfinished task remains for today
     const hasUnfinished = activeTasksToday.length > 0;
 
     return isPast17 || !hasUnfinished;
-  }, [isOffMode, simulatedTime, activeTasksToday]);
+  }, [isOffMode, currentTime, activeTasksToday]);
 
   const statsDoneCount = useMemo(() => tasks.filter((t) => t.status === 'DONE').length, [tasks]);
   const statsPendingCount = useMemo(() => tasks.filter((t) => t.status !== 'DONE').length, [tasks]);
@@ -360,18 +372,15 @@ export default function App() {
             </div>
           </div>
 
-          {/* Simulated Controls / Testers clock section */}
-          <div className="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-2xl flex items-center gap-2 text-xs transition duration-200">
-            <span className="font-mono text-gray-500 font-bold uppercase tracking-wider">⏱️ Giả lập giờ:</span>
-            <input
-              type="time"
-              value={simulatedTime}
-              onChange={(e) => setSimulatedTime(e.target.value)}
-              className="bg-white border border-gray-200 p-1 rounded-lg text-xs font-bold font-mono text-indigo-600"
-              title="Đổi giờ hệ thống để test mốc Sau 17:00 cho button Kết Thúc Ngày"
-            />
-            {simulatedTime >= '17:00' && (
-              <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.5 rounded uppercase font-mono animate-bounce-subtle">
+          {/* Real-time Current Clock section */}
+          <div className="p-2.5 bg-indigo-50/80 hover:bg-indigo-50 rounded-2xl flex items-center gap-2 text-xs transition duration-200 border border-indigo-100/50">
+            <Clock className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
+            <span className="font-mono text-indigo-500 font-bold uppercase tracking-wider">Giờ hiện tại:</span>
+            <span className="font-mono text-indigo-700 font-extrabold text-xs px-2.5 py-1 bg-white border border-indigo-100/60 rounded-xl shadow-xs">
+              {currentTime}
+            </span>
+            {currentTime >= '17:00' && (
+              <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.5 rounded-lg uppercase font-mono animate-bounce-subtle">
                 Sau 17h 🥐
               </span>
             )}

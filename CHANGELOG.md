@@ -5,6 +5,13 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 
 ---
 
+## [1.1.1] — 2026-06
+
+### Changed
+- **PB-2 (Cải tiến):** Loại bỏ tính năng "giả lập giờ" điều chỉnh thủ công bằng form nhập liệu, tích hợp bộ đồng hồ số động lấy từ thời gian hệ thống thực tế (`HH:MM`) cập nhật chính xác mỗi giây. Giúp quy chuẩn Kết thúc ngày (EOD) vận hành hoàn hảo, chính trực dựa trên hệ thống thực.
+
+---
+
 ## [1.1.0] — 2026-06
 
 ### Added
