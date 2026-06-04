@@ -5,6 +5,17 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 
 ---
 
+## [1.1.0] — 2026-06
+
+### Added
+- **PB-4 (Mở rộng):** Tích hợp thêm các mốc thời gian rảnh mới bao gồm **30 phút** và **60 phút** (bên cạnh mốc 15 phút) vào bộ lọc thông minh của Trợ Lý Ra Quyết Định (Decision Assistant) giúp linh hoạt bám sát mọi biến động trong lịch trình.
+- **Tài liệu hướng dẫn:** Cấu trúc và triển khai thành công chương hướng dẫn sử dụng toàn diện (User Guide) trong file `README.md` giúp người dùng nhanh chóng làm quen chiến thuật ma trận Eisenhower, ngân sách năng lượng hay kết thúc ngày làm việc tĩnh lặng.
+
+### Fixed
+- **PB-4 (Sửa lỗi):** Khắc phục lỗi xung đột giao diện nhấp nháy liên tục (render loop / iframe nested layouts) khi bấm kích hoạt Trợ Lý Ra Quyết Định bằng việc chuyển đổi cơ chế render Modal sang `createPortal` gắn vào `document.body`.
+
+---
+
 ## [1.0.0] — 2026-06
 
 ### Added
