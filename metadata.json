@@ -1,0 +1,6 @@
+{
+  "name": "FocusFlow",
+  "description": "Biết việc cần làm trong 30 giây. Làm chủ ngày của bạn.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
