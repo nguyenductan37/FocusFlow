@@ -271,3 +271,38 @@ FocusFlow giải quyết ba nỗi đau tâm lý cốt lõi:
 | **Khả năng mở rộng** | Hỗ trợ ≤ 1,000 người dùng đồng thời ở MVP |
 | **Tương thích** | Chrome, Safari, Firefox (2 phiên bản mới nhất); Mobile-responsive |
 | **Accessibility** | WCAG 2.1 AA — Contrast ratio ≥ 4.5:1 |
+
+---
+
+## 8. Dự Báo Rủi Ro & Biện Pháp Giảm Thiểu Thực Tế (Production Risks & Mitigations)
+
+Dưới đây là bảng phân tích chi tiết các rủi ro kỹ thuật, vận hành và trải nghiệm người dùng trong bối cảnh triển khai thực tế trên môi trường phân tán cùng các biện pháp kiểm soát tương ứng:
+
+### 8.1 Rủi ro về Logic Nghiệp vụ (Business Logic Risks)
+*   **Xung đột dời lịch dây chuyền:**
+    *   *Rủi ro:* Khi người dùng có quá nhiều nhiệm vụ liên tục sát giờ nhau, việc đồng ý dời lịch cho một mối xung đột có thể đẩy lùi nhiệm vụ đó đè lên một nhiệm vụ tiếp theo sau, gây ra hiện tượng xung đột vòng lặp hoặc dời lịch dây chuyền vô hạn.
+    *   *Giảm thiểu:* Giới hạn số lần dời lịch tự động (ví dụ: tối đa 3 tác vụ liên hoàn). Nếu phát hiện xung đột tiếp theo, hệ thống sẽ tự động gán trạng thái trì hoãn (`DEFERRED`) hoặc gợi ý người dùng tự điều chỉnh bằng kéo-thả thủ công thay vì dời tự động vô hạn.
+*   **Trục lợi chỉ số Năng lượng (Energy Reset Abuse):**
+    *   *Rủi ro:* Người dùng liên tục nhấn nút "Reset năng lượng" để gạt đi cảm giác mệt mỏi giả lập hoặc bấm hoàn thành khống các task "Năng lượng Cao", làm mất đi ý nghĩa của cảnh báo chống kiệt sức và làm sai lệch biểu đồ tăng trưởng của Growth Dashboard.
+    *   *Giảm thiểu:* Thiết lập khoảng thời gian chờ (cooldown) tối thiểu 2 giờ giữa các lần nhấn nút Reset năng lượng, đồng thời đưa ra các trắc nghiệm nhanh 5 giây về độ mệt mỏi để thu thập cảm quan chính xác nhất.
+
+### 8.2 Rủi ro về Tải trọng & Lượng Người dùng (User Load / Scalability Risks)
+*   **Phình to bộ nhớ trình duyệt (localStorage Bloat):**
+    *   *Rủi ro:* Do hệ thống lưu trữ toàn bộ lịch sử tasks, nhật ký hoàn thành phục vụ thuật toán tìm Khung giờ hiệu quả (Peak Hours) và Growth Dashboard trên trình duyệt người dùng, lượng dữ liệu sau 6-12 tháng có thể vượt ngưỡng giới hạn dung lượng trình duyệt (thường là 5MB cho localStorage), gây đứng ứng dụng.
+    *   *Giảm thiểu:* Áp dụng chính sách lưu kho (archiving policy). Chỉ giữ lại đầy đủ chi tiết dữ liệu của 30 ngày gần nhất trong bộ nhớ hoạt động chính. Các dữ liệu lịch sử cũ hơn sẽ được nén lại hoặc loại bỏ chỉ số phụ, chỉ giữ lại bảng phân tích tổng hợp cuối tuần rảnh rỗi.
+*   **Nút nghẽn đồng bộ đa thiết bị:**
+    *   *Rủi ro:* Nếu người dùng đăng nhập tài khoản FocusFlow trên cả điện thoại và máy tính, cơ chế xung đột lịch phức tạp khi đồng bộ song song có thể dẫn đến trạng thái ghi đè mất dữ liệu (race conditions).
+    *   *Giảm thiểu:* Triển khai cơ chế khóa phiên hoặc đối chiếu dựa trên thuộc tính vạn niên `updatedAt` (timestamp sửa đổi mới nhất). Ưu tiên ghi nhận dữ liệu từ thiết bị có thời gian thay đổi muộn nhất.
+
+### 8.3 Rủi ro về Bảo mật & Quyền riêng tư (Security & Privacy Risks)
+*   **Rủi ro tấn công XSS gây đánh cắp dữ liệu mô tả công việc:**
+    *   *Rủi ro:* Người dùng thường viết các thông tin nội bộ của công ty hoặc dữ liệu mật (mật mã, link nội bộ) vào phần mô tả công việc. Nếu trang ứng dụng dính mã độc chèn script (XSS), toàn bộ localStorage có thể bị đánh cắp dễ dàng.
+    *   *Giảm thiểu:* Áp dụng chế độ lọc thẻ HTML (Sanitization) nghiêm ngặt trước khi kết xuất bất kỳ dữ liệu text tự do nào ra giao diện. Cài đặt các chính sách kiểm soát tài nguyên Content Security Policy (CSP) chặt chẽ để chặn đứng hành vi gửi request ra server lạ.
+*   **Lộ thông tin nhạy cảm qua Nhật ký Log:**
+    *   *Rủi ro:* Ghi nhật ký lỗi (Error logs) chứa chi tiết tham số tiêu đề hoặc nội dung task riêng tư lên cloud server phục vụ việc gỡ lỗi.
+    *   *Giảm thiểu:* Thiết lập bộ lọc tiền xử lý tự động lọc bỏ các từ khóa nhạy cảm hoặc thay thế bằng hàm băm (hashing) trước khi truyền log ra khỏi phạm vi máy khách.
+
+### 8.4 Rủi ro về Trải nghiệm Người dùng (UX & Psychological Overload)
+*   **Hiệu ứng "Nhà dột cột xiêu" (Over-prompt Fatigue):**
+    *   *Rủi ro:* Việc liên tục gửi thông điệp chặn làm phiền, cảnh báo xung đột lịch hoặc nhắc nhở học tập chèn kẽ hở có thể khiến não bộ người dùng bị quá tải thông tin, dẫn tới việc bất chấp nhấp nút "Bỏ qua" hoặc đóng tab ứng dụng.
+    *   *Giảm thiểu:* Cơ chế học sâu hành động phủ quyết. Khi người dùng bỏ qua gợi ý học tập đủ 3 lần, ứng dụng sẽ tắt hẳn trạng thái gợi ý trong ngày và tự động giảm 50% tần suất gợi ý vào các ngày tiếp theo cho đến khi người dùng chủ động tương tác trở lại. Có các mốc giãn cách thông minh giữa các cảnh báo năng lượng nguy khốn.
