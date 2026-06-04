@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CalendarClock, Check, Play, Plus, Sparkles, X } from 'lucide-react';
 import { Task } from '../types';
 
@@ -15,18 +16,20 @@ interface DecisionAssistantProps {
 
 export default function DecisionAssistant({ tasks, onStartTask, onOpenCreateTask }: DecisionAssistantProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedMinutes, setSelectedMinutes] = useState<number>(15);
   const [recommended, setRecommended] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleOpen = () => {
+  const handleOpenWithMinutes = (minutes: number) => {
+    setSelectedMinutes(minutes);
     setLoading(true);
     setIsOpen(true);
 
     // AI suggestion simulation in under 1 second (AC-PB4-02)
     setTimeout(() => {
-      // Filter todo or in_progress tasks with duration <= 15
+      // Filter todo or in_progress tasks with duration <= minutes
       const candidates = tasks.filter(
-        (t) => (t.status === 'TODO' || t.status === 'IN_PROGRESS') && t.estimated_min <= 15
+        (t) => (t.status === 'TODO' || t.status === 'IN_PROGRESS') && t.estimated_min <= minutes
       );
 
       // Score each candidate (Eisenhower priority matrix Q1=40, Q2=30, Q3=20, Q4=10) + energy + (1 / duration)
@@ -41,6 +44,7 @@ export default function DecisionAssistant({ tasks, onStartTask, onOpenCreateTask
         else if (t.energy_level === 'MEDIUM') score += 3;
         else score += 1;
 
+        // Give weight to task of similar duration as selected
         score += (1 / (t.estimated_min || 1)) * 5;
 
         return { task: t, score };
@@ -76,20 +80,31 @@ export default function DecisionAssistant({ tasks, onStartTask, onOpenCreateTask
 
   return (
     <>
-      {/* Absolute Trigger Button on Dashboard */}
-      <button
-        id="btn-15min-assistant"
-        onClick={handleOpen}
-        className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-sans font-semibold text-sm rounded-2xl shadow-md cursor-pointer transition-all active:scale-95 group"
-      >
-        <Sparkles className="w-4 h-4 text-amber-300 animate-pulse group-hover:rotate-12 transition-transform" />
-        <span>Tôi có 15 phút rảnh...</span>
-      </button>
+      {/* Absolute Trigger Buttons on Dashboard */}
+      <div className="flex flex-wrap items-center gap-2">
+        {[15, 30, 60].map((mins) => (
+          <button
+            key={mins}
+            id={`btn-${mins}min-assistant`}
+            onClick={() => handleOpenWithMinutes(mins)}
+            className="flex items-center gap-1.5 px-4.5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-sans font-semibold text-xs rounded-xl shadow-xs cursor-pointer transition-all active:scale-95 group"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse group-hover:rotate-12 transition-transform" />
+            <span>Tôi có {mins}p</span>
+          </button>
+        ))}
+      </div>
 
-      {/* Suggestion Modal Panel */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity animate-fade-in">
-          <div className="relative w-full max-w-md bg-white border border-gray-100 rounded-3xl shadow-2xl p-6 overflow-hidden">
+      {/* Suggestion Modal Panel - Rendered on Body level to avoid parent container transform-clipping (Vite layout bug) */}
+      {isOpen && createPortal(
+        <div 
+          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity animate-fade-in"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md bg-white border border-gray-100 rounded-3xl shadow-2xl p-6 overflow-hidden"
+          >
             
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-5">
@@ -98,7 +113,7 @@ export default function DecisionAssistant({ tasks, onStartTask, onOpenCreateTask
                   <CalendarClock className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-sans font-bold text-lg text-gray-900">Trợ Lý 15 Phút</h3>
+                  <h3 className="font-sans font-bold text-lg text-gray-900">Trợ Lý {selectedMinutes} Phút</h3>
                   <p className="text-xs text-gray-500 font-medium">Bí kíp dứt điểm các đầu việc nhanh gọn</p>
                 </div>
               </div>
@@ -184,7 +199,7 @@ export default function DecisionAssistant({ tasks, onStartTask, onOpenCreateTask
                 <div className="w-14 h-14 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-3">
                   <Sparkles className="w-6 h-6" />
                 </div>
-                <h4 className="font-semibold text-gray-800 text-sm">Không tìm thấy task ngắn ≤ 15 phút</h4>
+                <h4 className="font-semibold text-gray-800 text-sm">Không tìm thấy task ngắn ≤ {selectedMinutes} phút</h4>
                 <p className="text-xs text-gray-500 mt-1 max-w-[280px]">
                   Danh sách chưa có việc ngắn phù hợp để tối ưu khoảng thời rảnh này. Hãy gieo mầm một việc mới ngay!
                 </p>
@@ -192,17 +207,18 @@ export default function DecisionAssistant({ tasks, onStartTask, onOpenCreateTask
                   id="btn-quick-create-fallback"
                   onClick={() => {
                     setIsOpen(false);
-                    onOpenCreateTask(15);
+                    onOpenCreateTask(selectedMinutes);
                   }}
                   className="mt-4 flex items-center justify-center gap-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-sans font-bold text-xs rounded-xl transition cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  Tạo nhanh task 15 phút
+                  Tạo nhanh task {selectedMinutes} phút
                 </button>
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
