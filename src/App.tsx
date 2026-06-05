@@ -96,63 +96,6 @@ export default function App() {
     localStorage.setItem('focusflow_tasks', JSON.stringify(updatedTasks));
   };
 
-  // ---- 3. SIMULATE HISTORICAL DATA FOR ADVANCED METRICS (AC-PB3-02, PB-5) ----
-  const handleSimulateHistoricData = () => {
-    const today = getTodayDateString();
-    const yesterday = getYesterdayDateString();
-
-    const historicalCompletions: Task[] = [
-      {
-        id: 'mock-hist-1',
-        title: 'Thiết kế sơ đồ cơ sở dữ liệu Spanner',
-        status: 'DONE',
-        category: 'Làm việc',
-        eisenhower_q: 'Q2',
-        energy_level: 'HIGH',
-        estimated_min: 60,
-        completed_at: `${yesterday}T10:15:00.000Z`,
-        due_date: yesterday,
-      },
-      {
-        id: 'mock-hist-2',
-        title: 'Review PR & sửa lỗi UI checkout',
-        status: 'DONE',
-        category: 'Làm việc',
-        eisenhower_q: 'Q1',
-        energy_level: 'MEDIUM',
-        estimated_min: 30,
-        completed_at: `${yesterday}T10:45:00.000Z`,
-        due_date: yesterday,
-      },
-      {
-        id: 'mock-hist-3',
-        title: 'Học bài và viết code thuật toán Dijkstra',
-        status: 'DONE',
-        category: 'Học tập',
-        eisenhower_q: 'Q2',
-        energy_level: 'HIGH',
-        estimated_min: 45,
-        completed_at: `${yesterday}T09:15:00.000Z`,
-        due_date: yesterday,
-      },
-      {
-        id: 'mock-hist-4',
-        title: 'Khôi phục backups của server staging',
-        status: 'DONE',
-        category: 'Admin',
-        eisenhower_q: 'Q3',
-        energy_level: 'LOW',
-        estimated_min: 15,
-        completed_at: `${yesterday}T15:20:00.000Z`,
-        due_date: yesterday,
-      },
-    ];
-
-    const bulk = [...tasks.filter((t) => !t.id.startsWith('mock-hist-')), ...historicalCompletions];
-    saveTasksToStorage(bulk);
-    alert('Đã nạp 4 nhiệm vụ lịch sử thành công! Hãy kiểm tra tab Tăng Trưởng để xem biểu đồ và kết quả phân tích giờ tối ưu!');
-  };
-
   // ---- 4. HANDLERS AND EVENT ACTIONS ----
 
   // Task Creation and Updation
@@ -523,7 +466,6 @@ export default function App() {
           // Tab 2: Performance Growth Dashboard
           <GrowthDashboard
             tasks={tasks}
-            onSimulateHistoricalData={handleSimulateHistoricData}
           />
         )}
       </main>

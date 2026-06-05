@@ -158,7 +158,7 @@ FocusFlow giải quyết ba nỗi đau tâm lý cốt lõi:
 | ID | Tiêu chí | Trạng thái |
 |----|----------|:---:|
 | AC-PB3-01 | Hệ thống ghi nhận timestamp hoàn thành của mỗi task (ngầm, không yêu cầu thao tác thêm từ người dùng). | Hoàn thành |
-| AC-PB3-02 | Sau khi có ≥ 7 ngày dữ liệu, hệ thống tính toán khung giờ hoàn thành task nhiều nhất. (Phát triển: cho phép demo với dữ liệu giả lập có sẵn tiện lợi, kèm theo ghi nhân thực tế). | Hoàn thành |
+| AC-PB3-02 | Sau khi có ≥ 7 ngày dữ liệu, hệ thống tính toán khung giờ hoàn thành task nhiều nhất. (Sử dụng 100% dữ liệu thực tế đóng góp từ người dùng thay vì dùng nút kích hoạt giả lập). | Hoàn thành |
 | AC-PB3-03 | Hệ thống gợi ý ít nhất 1 khung giờ "Deep Work" được đề xuất cho ngày hôm sau. | Hoàn thành |
 | AC-PB3-04 | Gợi ý Deep Work ưu tiên các task có mức năng lượng = Cao và ô Eisenhower = Q1 hoặc Q2. | Hoàn thành |
 | AC-PB3-05 | Người dùng có thể xem lý do gợi ý ("Bạn thường làm tốt nhất lúc 9:00–11:00"). | Hoàn thành |

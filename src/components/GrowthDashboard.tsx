@@ -4,16 +4,15 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { Award, BarChart3, Brain, CheckSquare, Clock, ArrowUpRight, TrendingUp, RefreshCw } from 'lucide-react';
+import { Award, BarChart3, Brain, CheckSquare, Clock, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { Task } from '../types';
 import { MOCK_HISTORIC_WEEKS } from '../utils/dummyData';
 
 interface GrowthDashboardProps {
   tasks: Task[];
-  onSimulateHistoricalData: () => void;
 }
 
-export default function GrowthDashboard({ tasks, onSimulateHistoricalData }: GrowthDashboardProps) {
+export default function GrowthDashboard({ tasks }: GrowthDashboardProps) {
   // 📈 1. Ratio computation (Work vs Study vs Admin) (AC-PB5-01)
   const statsByCategory = useMemo(() => {
     // We compute hours based on completed tasks
@@ -196,27 +195,6 @@ export default function GrowthDashboard({ tasks, onSimulateHistoricalData }: Gro
 
   return (
     <div className="space-y-6">
-      
-      {/* Simulation Banner Area */}
-      <div className="p-4 bg-gradient-to-r from-indigo-900 to-slate-900 text-white border border-slate-800 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-md">
-        <div>
-          <h4 className="font-sans font-bold text-sm text-yellow-300 flex items-center gap-1.5">
-            <Award className="w-4 h-4 text-yellow-300" />
-            Kiểm Thử Thuật Toán & Giả Lập Dữ Liệu Lịch Sử
-          </h4>
-          <p className="text-[11px] text-slate-300 mt-1 max-w-sm">
-            Bấm nút bên để bơm dữ liệu lịch sử tuần trước giúp kích hoạt hiển thị Biểu đồ tăng trưởng 4 tuần chính xác ngay lập tức!
-          </p>
-        </div>
-        <button
-          id="btn-simulate-history"
-          onClick={onSimulateHistoricalData}
-          className="flex items-center gap-1 px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 active:scale-95 text-slate-950 text-xs font-bold rounded-xl transition cursor-pointer"
-        >
-          <RefreshCw className="w-3.5 h-3.5 animate-spin-slow" />
-          Kích hoạt Giả lập 7 ngày
-        </button>
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         
