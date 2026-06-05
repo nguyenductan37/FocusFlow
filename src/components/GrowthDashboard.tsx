@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { Award, BarChart3, Brain, CheckSquare, Clock, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { Award, BarChart3, Brain, CheckSquare, Clock, ArrowUpRight, TrendingUp, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { Task } from '../types';
 import { MOCK_HISTORIC_WEEKS } from '../utils/dummyData';
 
@@ -13,6 +13,7 @@ interface GrowthDashboardProps {
 }
 
 export default function GrowthDashboard({ tasks }: GrowthDashboardProps) {
+  const [showFormula, setShowFormula] = useState(false);
   // 📈 1. Ratio computation (Work vs Study vs Admin) (AC-PB5-01)
   const statsByCategory = useMemo(() => {
     // We compute hours based on completed tasks
@@ -339,53 +340,67 @@ export default function GrowthDashboard({ tasks }: GrowthDashboardProps) {
  
             {/* Legend & Formula */}
             <div className="pt-4 border-t border-gray-100/80 space-y-3">
-              <div className="flex items-center justify-center gap-5 pt-1 text-[11px] font-bold text-gray-600">
-                <span className="flex items-center gap-1.5">
-                  <span className="inline-block w-2.5 h-2.5 bg-indigo-600 rounded-sm" /> 💼 Làm việc
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="inline-block w-2.5 h-2.5 bg-teal-500 rounded-sm" /> 📚 Học tập
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="inline-block w-2.5 h-2.5 bg-amber-400 rounded-sm" /> ⚙️ Admin (Vặt)
-                </span>
-              </div>
-              
-              <div className="text-[11px] leading-relaxed text-slate-600 bg-indigo-50/50 border border-indigo-100/40 p-4.5 rounded-2xl max-w-xl mx-auto space-y-3.5 shadow-2xs">
-                <div className="text-center space-y-1">
-                  <p className="font-bold text-indigo-950 flex items-center justify-center gap-1.5 text-xs">
-                    <span>⚡</span> Thuật toán Điểm Tăng Trưởng Kỹ Năng Tự Động (Weekly Skill Score)
-                  </p>
-                  <code className="inline-block bg-white border border-indigo-150 py-1.5 px-4 rounded-xl text-indigo-700 font-mono font-black text-xs shadow-3xs">
-                    Score_Task = Effort_Factor × Duration_In_Hours × Strategy_Weight
-                  </code>
+              <div className="flex items-center justify-between gap-4 flex-wrap pt-1 text-[11px] font-bold text-gray-600">
+                <div className="flex items-center gap-4 flex-wrap">
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block w-2.5 h-2.5 bg-indigo-600 rounded-sm" /> 💼 Làm việc
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block w-2.5 h-2.5 bg-teal-500 rounded-sm" /> 📚 Học tập
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block w-2.5 h-2.5 bg-amber-400 rounded-sm" /> ⚙️ Admin (Vặt)
+                  </span>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[10px] pt-1">
-                  <div className="bg-white/80 border border-slate-100 p-2 rounded-xl space-y-1">
-                    <p className="font-bold text-gray-700 uppercase tracking-wider text-[9px]">💡 1. Hệ số Năng lượng (Effort Factor)</p>
-                    <ul className="list-disc pl-3.5 space-y-0.5 font-medium text-gray-500">
-                      <li>⚡ Mức Cao (HIGH): <span className="font-bold text-indigo-600">4.0đ</span>/giờ</li>
-                      <li>⚡ Trung bình (MEDIUM): <span className="font-bold text-indigo-600">2.0đ</span>/giờ</li>
-                      <li>⚡ Mức Thấp (LOW): <span className="font-bold text-indigo-600">1.0đ</span>/giờ</li>
-                    </ul>
+                <button
+                  type="button"
+                  onClick={() => setShowFormula(!showFormula)}
+                  className="flex items-center gap-1 px-3 py-1 bg-indigo-50 hover:bg-indigo-100 active:scale-98 text-indigo-700 text-[11px] font-bold rounded-xl transition shadow-3xs cursor-pointer border border-indigo-100/40"
+                >
+                  <HelpCircle className="w-3.5 h-3.5 text-indigo-650" />
+                  {showFormula ? 'Ẩn công thức tính điểm' : 'Xem công thức tính điểm'}
+                  {showFormula ? <ChevronUp className="w-3.5 h-3.5 ml-0.5 text-indigo-550" /> : <ChevronDown className="w-3.5 h-3.5 ml-0.5 text-indigo-550" />}
+                </button>
+              </div>
+              
+              {showFormula && (
+                <div className="text-[11px] leading-relaxed text-slate-600 bg-indigo-50/50 border border-indigo-100/40 p-4.5 rounded-2xl max-w-xl mx-auto space-y-3.5 shadow-2xs">
+                  <div className="text-center space-y-1">
+                    <p className="font-bold text-indigo-950 flex items-center justify-center gap-1.5 text-xs">
+                      <span>⚡</span> Thuật toán Điểm Tăng Trưởng Kỹ Năng Tự Động (Weekly Skill Score)
+                    </p>
+                    <code className="inline-block bg-white border border-indigo-150 py-1.5 px-4 rounded-xl text-indigo-700 font-mono font-black text-xs shadow-3xs">
+                      Score_Task = Effort_Factor × Duration_In_Hours × Strategy_Weight
+                    </code>
                   </div>
                   
-                  <div className="bg-white/80 border border-slate-100 p-2 rounded-xl space-y-1">
-                    <p className="font-bold text-gray-700 uppercase tracking-wider text-[9px]">🎯 2. Trọng số Chiến lược (Strategy Weight)</p>
-                    <ul className="list-disc pl-3.5 space-y-0.5 font-medium text-gray-500">
-                      <li>🟦 Ô Q2 (Chiến lược): <span className="font-bold text-teal-600">x1.5</span> (Điểm thưởng cao)</li>
-                      <li>🟥 Ô Q1 (Khủng hoảng): <span className="font-bold text-rose-600">x1.2</span> (+20%)</li>
-                      <li>🟨 Ô Q3 (Chen ngang): <span className="font-bold text-amber-600">x0.8</span> (-20%)</li>
-                      <li>🟩 Ô Q4 (Phân tâm): <span className="font-bold text-slate-600">x0.3</span> (Hạ điểm)</li>
-                    </ul>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[10px] pt-1">
+                    <div className="bg-white/80 border border-slate-100 p-2 rounded-xl space-y-1">
+                      <p className="font-bold text-gray-700 uppercase tracking-wider text-[9px]">💡 1. Hệ số Năng lượng (Effort Factor)</p>
+                      <ul className="list-disc pl-3.5 space-y-0.5 font-medium text-gray-500">
+                        <li>⚡ Mức Cao (HIGH): <span className="font-bold text-indigo-600">4.0đ</span>/giờ</li>
+                        <li>⚡ Trung bình (MEDIUM): <span className="font-bold text-indigo-600">2.0đ</span>/giờ</li>
+                        <li>⚡ Mức Thấp (LOW): <span className="font-bold text-indigo-600">1.0đ</span>/giờ</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white/80 border border-slate-100 p-2 rounded-xl space-y-1">
+                      <p className="font-bold text-gray-700 uppercase tracking-wider text-[9px]">🎯 2. Trọng số Chiến lược (Strategy Weight)</p>
+                      <ul className="list-disc pl-3.5 space-y-0.5 font-medium text-gray-500">
+                        <li>🟦 Ô Q2 (Chiến lược): <span className="font-bold text-teal-600">x1.5</span> (Điểm thưởng cao)</li>
+                        <li>🟥 Ô Q1 (Khủng hoảng): <span className="font-bold text-rose-600">x1.2</span> (+20%)</li>
+                        <li>🟨 Ô Q3 (Chen ngang): <span className="font-bold text-amber-600">x0.8</span> (-20%)</li>
+                        <li>🟩 Ô Q4 (Phân tâm): <span className="font-bold text-slate-600">x0.3</span> (Hạ điểm)</li>
+                      </ul>
+                    </div>
                   </div>
-                </div>
 
-                <p className="text-[9.5px] text-indigo-500 font-semibold italic text-center leading-normal pt-1 border-t border-indigo-150/50">
-                  *Công việc được đổi từ phút thành giờ (Duration_In_Hours = phút / 60). Mô hình giúp định hướng người dùng giải quyết các tác vụ có chiều sâu (HIGH) và thúc đẩy công việc mang tinh chất chiến lược nằm tại ô Q2!
-                </p>
-              </div>
+                  <p className="text-[9.5px] text-indigo-500 font-semibold italic text-center leading-normal pt-1 border-t border-indigo-150/50">
+                    *Công việc được đổi từ phút thành giờ (Duration_In_Hours = phút / 60). Mô hình giúp định hướng người dùng giải quyết các tác vụ có chiều sâu (HIGH) và thúc đẩy công việc mang tinh chất chiến lược nằm tại ô Q2!
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

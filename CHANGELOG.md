@@ -12,6 +12,7 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 - **AC-PB31-04 (Cải tiến):** Điều chỉnh cơ chế phục hồi thể trạng tại `handleTakeBreak`. Khi người dùng click nút, chỉ số % ngân sách năng lượng tinh thần sẽ lập tức reset nạp đầy về đúng 100% thay vì cộng dồn +20% như trước. Đổi nhãn nút tương ứng trong `EnergyBar` thành: `"Tôi đã nghỉ ngơi (100%)"` để người dùng dễ kiểm soát.
 - **AC-PB51-03 & AC-PB51-04 (Cải tiến):** Bổ sung nút `"Bỏ qua"` với phong cách màu trắng sữa trực quan bên sườn nút `"Chèn học tập ngay"` trên Ribbon Đề xuất Time-boxing học tập thuộc cấu phần `Scheduler`. Tích hợp quy chuẩn đóng tắt thông báo: lưu trữ số lượng click từ chối (`studyIgnoreCount`) vào `localStorage`; khi nhấn "Bỏ qua" đủ 3 lần, hệ thống nhận diện và ẩn hoàn toàn hộp gợi ý suốt phần còn lại của ngày.
 - **AC-PB3-02 (Cải tiến - Loại bỏ giả lập):** Loại bỏ hoàn toàn nút bấm và chức năng giả lập dữ liệu lịch sử ("Kích hoạt Giả lập 7 ngày") để hướng tới sản phẩm thuần dữ liệu thật của người dùng. Hệ thống tự động tính toán khung giờ tối ưu (Peak hours) cũng như biểu đồ trực quan dựa 100% trên dữ liệu thao tác hoàn thành task (DONE) thực tế từ LocalStorage mà không vi phạm các tiêu chuẩn kỹ thuật trong SPEC.md.
+- **Tối ưu hóa Diện tích Giao diện (Bản đồ Tăng trưởng):** Ẩn bớt bảng bóc tách công thức toán học tính điểm tăng trưởng chi tiết dưới một nút bấm tương tác (`Xem công thức tính điểm`), giúp giao diện gọn gàng, tăng cường độ tập trung trực quan vào biểu đồ và số liệu lịch sử thực tế của bản thân người dùng.
 
 ---
 
