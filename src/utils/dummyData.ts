@@ -105,34 +105,34 @@ export const INITIAL_TASLES: Task[] = [
   }
 ];
 
-// Historical statistics for Growth Dashboard (PB-5)
+// Historical statistics for Growth Dashboard (PB-4 & PB-5, configured with updated Task Skill Scores)
 export const MOCK_HISTORIC_WEEKS = [
   {
     weekLabel: '3 tuần trước',
-    'Làm việc': 24, // hours
-    'Học tập': 12,
-    'Admin': 8,
-    score: 65,
+    'Làm việc': 12, // hours
+    'Học tập': 6,
+    'Admin': 4,
+    score: 14.2,
   },
   {
     weekLabel: '2 tuần trước',
-    'Làm việc': 28,
-    'Học tập': 14,
-    'Admin': 6,
-    score: 72,
+    'Làm việc': 14,
+    'Học tập': 8,
+    'Admin': 3,
+    score: 16.8,
   },
   {
     weekLabel: 'Tuần trước',
-    'Làm việc': 20,
-    'Học tập': 18,
-    'Admin': 5,
-    score: 80,
+    'Làm việc': 13,
+    'Học tập': 7,
+    'Admin': 2,
+    score: 15.5,
   },
   {
     weekLabel: 'Tuần này',
-    'Làm việc': 16,
-    'Học tập': 15,
-    'Admin': 4,
-    score: 85,
+    'Làm việc': 8,
+    'Học tập': 6,
+    'Admin': 2,
+    score: 12.5,
   },
 ];

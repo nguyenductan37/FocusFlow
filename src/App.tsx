@@ -259,13 +259,10 @@ export default function App() {
     saveTasksToStorage(updated);
   };
 
-  // Take a break (+20%)
+  // Reset energy to 100% (AC-PB31-04)
   const handleTakeBreak = () => {
-    setEnergyScore((current) => {
-      const nextScore = Math.min(100, current + 20);
-      localStorage.setItem('focusflow_energy', String(nextScore));
-      return nextScore;
-    });
+    setEnergyScore(100);
+    localStorage.setItem('focusflow_energy', '100');
   };
 
   // Exit OFF Mode (AC-PB2-05)

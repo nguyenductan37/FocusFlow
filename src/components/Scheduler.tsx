@@ -30,6 +30,12 @@ export function minutesToTimeString(mins: number): string {
 }
 
 export default function Scheduler({ tasks, onUpdateTaskTime, onOpenCreateTask, onSelectTaskToEdit }: SchedulerProps) {
+  // Load and manage study ignore count from localStorage (AC-PB51-03 & AC-PB51-04)
+  const [studyIgnoreCount, setStudyIgnoreCount] = React.useState<number>(() => {
+    const countStr = localStorage.getItem('focusflow_study_ignore_count');
+    return countStr ? Number(countStr) : 0;
+  });
+
   // Extract scheduled non-done tasks for clashing computations
   const scheduledTasks = useMemo(() => {
     return tasks
@@ -68,6 +74,8 @@ export default function Scheduler({ tasks, onUpdateTaskTime, onOpenCreateTask, o
   // Find educational time slots for PB-5.1 (Time-boxing học tập tự động)
   // Gaps of >= 20 mins between scheduled tasks or in morning slot
   const studySlotProposal = useMemo(() => {
+    if (studyIgnoreCount >= 3) return null;
+
     if (scheduledTasks.length === 0) {
       // If no scheduled tasks, suggest morning at 9:00
       return { slot: '09:00', duration: 25, reason: 'Lịch sáng còn trống hoàn hảo' };
@@ -102,7 +110,7 @@ export default function Scheduler({ tasks, onUpdateTaskTime, onOpenCreateTask, o
     }
 
     return null;
-  }, [scheduledTasks]);
+  }, [scheduledTasks, studyIgnoreCount]);
 
   const handleApplyResolution = (taskId: string, targetTime: string) => {
     onUpdateTaskTime(taskId, targetTime);
@@ -164,11 +172,11 @@ export default function Scheduler({ tasks, onUpdateTaskTime, onOpenCreateTask, o
 
       {/* 📚 Educational Time-boxing Suggestions (PB-5.1) */}
       {studySlotProposal && (
-        <div id="education-timebox-container" className="p-4 bg-teal-50 border border-teal-100 rounded-2xl flex items-start gap-3">
+        <div id="education-timebox-container" className="p-4 bg-teal-50 border border-teal-100 rounded-2xl flex items-start gap-3 animate-fade-in">
           <div className="p-1.5 bg-teal-600 text-white rounded-lg mt-0.5">
             <Calendar className="w-4 h-4" />
           </div>
-          <div className="flex-1 text-xs">
+          <div className="flex-1 text-xs text-left">
             <h5 className="font-bold text-teal-900">Gợi ý chèn giờ học tập (Time-boxing học tập)</h5>
             <p className="text-teal-700 mt-0.5">{studySlotProposal.reason}. Đề xuất củng cố kỹ năng lúc <strong className="font-mono">{studySlotProposal.slot}</strong> ({studySlotProposal.duration} phút).</p>
             <div className="mt-2.5 flex items-center gap-2">
@@ -180,6 +188,19 @@ export default function Scheduler({ tasks, onUpdateTaskTime, onOpenCreateTask, o
                 className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold rounded-lg cursor-pointer"
               >
                 Chèn học tập ngay
+              </button>
+
+              <button
+                id="btn-ignore-timebox"
+                onClick={() => {
+                  const nextCount = studyIgnoreCount + 1;
+                  setStudyIgnoreCount(nextCount);
+                  localStorage.setItem('focusflow_study_ignore_count', String(nextCount));
+                }}
+                className="px-3 py-1.5 bg-white hover:bg-gray-100 text-teal-800 text-[11px] font-bold rounded-lg cursor-pointer border border-teal-200 transition-colors"
+                title="Bỏ qua gợi ý này"
+              >
+                Bỏ qua
               </button>
             </div>
           </div>

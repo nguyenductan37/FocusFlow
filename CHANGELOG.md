@@ -5,6 +5,22 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 
 ---
 
+## [1.3.0] — 2026-06
+
+### Improved
+- **AC-PB5-02 & AC-PB5-03 (Cải tiến - Tăng trưởng kĩ năng):** Cải tiến thuật toán & đồ thị Bản đồ Tăng trưởng. Thay thế chỉ số tĩnh của "Tuần này" thành dữ liệu tổng hợp thời gian thực từ các đầu việc đã hoàn tất (`status === 'DONE'`). Tích hợp công thức tính Điểm tiến độ kĩ năng chuẩn hóa theo từng đầu việc cụ thể: $Score_{Task} = Effort Factor \times Duration In Hours \times Strategy Weight$ (trong đó hệ số nỗ lực HIGH=4.0, MEDIUM=2.0, LOW=1.0; trọng số ma trận Q2=1.5, Q1=1.2, Q3=0.8, Q4=0.3) cùng cơ chế so sánh tỷ suất tăng tiến tương đối so với tuần trước tránh tuyệt đối lỗi chia cho 0. Hiển thị bảng mô tả chi tiết công thức đẹp đẽ trực quan ngay dưới Legend.
+- **AC-PB31-04 (Cải tiến):** Điều chỉnh cơ chế phục hồi thể trạng tại `handleTakeBreak`. Khi người dùng click nút, chỉ số % ngân sách năng lượng tinh thần sẽ lập tức reset nạp đầy về đúng 100% thay vì cộng dồn +20% như trước. Đổi nhãn nút tương ứng trong `EnergyBar` thành: `"Tôi đã nghỉ ngơi (100%)"` để người dùng dễ kiểm soát.
+- **AC-PB51-03 & AC-PB51-04 (Cải tiến):** Bổ sung nút `"Bỏ qua"` với phong cách màu trắng sữa trực quan bên sườn nút `"Chèn học tập ngay"` trên Ribbon Đề xuất Time-boxing học tập thuộc cấu phần `Scheduler`. Tích hợp quy chuẩn đóng tắt thông báo: lưu trữ số lượng click từ chối (`studyIgnoreCount`) vào `localStorage`; khi nhấn "Bỏ qua" đủ 3 lần, hệ thống nhận diện và ẩn hoàn toàn hộp gợi ý suốt phần còn lại của ngày.
+
+---
+
+## [1.2.0] — 2026-06
+
+### Improved
+- **AC-PB3-04 (Cải tiến):** Thiết lập và tích hợp trực quan khu vực "Tác vụ Deep Work đề xuất" ngay bên dưới widget "Khung giờ Deep Work tối ưu" trong Bảng Tăng Trưởng (Growth Dashboard). Cấu phần tự động lọc thời gian thực tối đa 2 tác vụ chưa hoàn thành thỏa mãn đồng thời: mức năng lượng là HIGH và thuộc ô ma trận Eisenhower Q1 hoặc Q2, kèm theo fallback hướng dẫn tạo/phân loại thân thiện.
+
+---
+
 ## [1.1.1] — 2026-06
 
 ### Changed

@@ -68,7 +68,7 @@ export default function EnergyBar({ currentScore, onTakeBreak }: EnergyBarProps)
           className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-600 text-xs font-semibold rounded-xl transition-all"
         >
           <Coffee className="w-3.5 h-3.5" />
-          Nghỉ ngơi (+20%)
+          Tôi đã nghỉ ngơi (100%)
         </button>
       </div>
     </div>

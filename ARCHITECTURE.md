@@ -113,3 +113,32 @@ Mỗi khi một công việc được người dùng chuyển sang hoàn thành 
 - `LOW` energy task: Tiêu tốn `3` điểm.
 
 Khi người dùng thực hiện kích hoạt nút "Tôi đã nghỉ ngơi" hoặc đóng lịch làm việc, điểm năng lượng hồi lại `20` điểm (giới hạn tối đa là `100` điểm). Hệ thống hiển thị cảnh báo nghỉ ngơi nếu điểm năng lượng rơi xuống dưới `20%`.
+
+### 3.4 Skill Growth Score Formula (PB-5)
+
+Tính năng "Tăng trưởng kỹ năng" phản ánh chân thực tiến độ nâng cao tri thức và hiệu năng làm việc dựa trên dữ liệu tác vụ thực tế đã hoàn thành:
+
+1. **Công thức tính Điểm tiến độ kỹ năng của mỗi nhiệm vụ (Task Skill Score):**
+   $$\text{{Score}}_{\text{{Task}}} = \text{{Effort Factor}} \times \text{{Duration In Hours}} \times \text{{Strategy Weight}}$$
+   - **Hệ số nỗ lực trí tuệ (Effort Factor - Năng lượng của Task):**
+     - Mức Cao (`HIGH` - Deep Work): $4.0$ điểm/giờ.
+     - Mức Trung bình (`MEDIUM` - Shallow Work): $2.0$ điểm/giờ.
+     - Mức Thấp (`LOW` - Admin/Routine): $1.0$ điểm/giờ.
+   - **Trọng số thời lượng hoàn thành thực tế (Duration In Hours):**
+     - Quy đổi từ phút thành giờ thực tế: $\text{{Duration In Hours}} = \frac{\text{{estimated\_min}}}{60}$.
+   - **Hệ số định hướng chiến lược (Strategy Weight - Ma trận Eisenhower):**
+     - Ô **Q2** (Quan quan trọng, Không khẩn cấp): $\times 1.5$ (Nhân thưởng cao nhất khuyến khích phát triển chiến lược lâu dài và học hỏi bền vững).
+     - Ô **Q1** (Quan quan trọng, Khẩn cấp): $\times 1.2$ (Nhân thưởng 20% do tính chất khẩn cấp giải quyết vấn đề).
+     - Ô **Q3** (Khẩn cấp, Không quan trọng): $\times 0.8$ (Giảm phạt 20% điểm vì tính chất bận rộn ít giá trị).
+     - Ô **Q4** (Không khẩn cấp, Không quan trọng): $\times 0.3$ (Phạt nặng 70% điểm để hạn chế thời gian phân tâm).
+
+2. **Công thức Điểm Kỹ năng Hàng tuần (Weekly Skill Progress Score):**
+   $$\text{{Score}}_{\text{{Weekly}}} = \sum_{t \in \text{{Completed Tasks}}} \text{{Score}}_{\text{{Task}}(t)}$$
+
+3. **Công thức tính Tỷ số tăng trưởng so với tuần trước (Weekly Growth Rate %):**
+   $$\text{{Growth Rate \%}} = \frac{\text{{Score}}_{\text{{Tuần này}}} - \text{{Score}}_{\text{{Tuần trước}}}}{\text{{Score}}_{\text{{Tuần trước}}}} \times 100$$
+   - *Xử lý an toàn tránh lỗi Zero-Division:*
+     - Lịch sử Tuần trước có điểm số = 0 và Tuần này > 0: Tỷ suất tăng trưởng mặc định đạt $+100\%$.
+     - Cả hai tuần đều có điểm số = 0: Tỷ suất tăng trưởng mặc định đạt $0\%$.
+     - Điểm số tuần trước > 0: Thực hiện tính toán chuẩn xác và bo tròn số thập phân.
+
