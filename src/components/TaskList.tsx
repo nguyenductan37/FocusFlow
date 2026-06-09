@@ -12,6 +12,8 @@ interface TaskListProps {
   onToggleTaskComplete: (taskId: string) => void;
   onSelectTaskToEdit: (task: Task) => void;
   onOpenCreateTask: () => void;
+  onSplitTask?: (taskId: string) => void;
+  isSplittingTaskId?: string | null;
 }
 
 export default function TaskList({
@@ -19,6 +21,8 @@ export default function TaskList({
   onToggleTaskComplete,
   onSelectTaskToEdit,
   onOpenCreateTask,
+  onSplitTask,
+  isSplittingTaskId,
 }: TaskListProps) {
   const [filterQuarter, setFilterQuarter] = useState<EisenhowerQuadrant | 'ALL'>('ALL');
   const [filterEnergy, setFilterEnergy] = useState<EnergyLevel | 'ALL'>('ALL');
@@ -248,6 +252,24 @@ export default function TaskList({
                         ⏱️ {task.estimated_min}phút
                       </span>
                     </div>
+
+                    {/* Warning badge & split button (PB-F2) */}
+                    {task.postpone_count && task.postpone_count >= 3 && !isDone && (
+                      <div className="mt-2.5 p-2 bg-orange-50/80 border border-orange-100 rounded-lg flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
+                        <span className="text-[10px] font-bold text-orange-600 flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" /> Bị dời hạn {task.postpone_count} lần
+                        </span>
+                        {onSplitTask && (
+                          <button
+                            onClick={() => onSplitTask(task.id)}
+                            disabled={isSplittingTaskId === task.id}
+                            className="px-2 py-1 bg-white hover:bg-orange-100 border border-orange-200 text-orange-600 text-[10px] font-bold rounded-md shadow-xs transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                          >
+                            {isSplittingTaskId === task.id ? '⏳ Đang rã nhỏ...' : '🧩 Rã nhỏ bước hành động'}
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Absolute Edit button triggers */}
