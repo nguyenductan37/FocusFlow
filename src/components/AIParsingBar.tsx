@@ -54,7 +54,7 @@ export default function AIParsingBar({ onTaskCreated }: AIParsingBarProps) {
       }, 4000);
 
     } catch (error: any) {
-      setErrorMsg('Không thể phân tích. Vui lòng thử cách diễn đạt khác!');
+      setErrorMsg(error?.message || 'Không thể phân tích. Vui lòng thử cách diễn đạt khác!');
       console.error(error);
     } finally {
       setIsProcessing(false);

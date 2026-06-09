@@ -7,16 +7,27 @@ import { GoogleGenAI, Type } from '@google/genai';
 import { Task, EnergyLevel } from '../types';
 import { getTodayDateString } from './dummyData';
 
-// Khởi tạo Client GenAI bằng API Key từ Vite env
-// Cần truyền API Key rõ ràng do đây là biến client-side custom
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+// Khởi tạo Client GenAI bằng API Key từ Vite env theo cơ chế Lazy Initialization
+// Tránh crash toàn app khi build production/deploy thực tế mà chưa cấu hình biến môi trường
+let aiInstance: GoogleGenAI | null = null;
+
+function getGenAI(): GoogleGenAI {
+  if (!aiInstance) {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('Chưa cấu hình API Key. Vui lòng thiết lập biến môi trường VITE_GEMINI_API_KEY.');
+    }
+    aiInstance = new GoogleGenAI({ apiKey });
+  }
+  return aiInstance;
+}
 
 /**
  * PB-F1: Xử lý ngôn ngữ tự nhiên để tự động tạo Task (AI Auto-Triage)
  */
 export async function parseNaturalLanguageTask(inputText: string): Promise<Partial<Task>> {
   try {
-    const response = await ai.models.generateContent({
+    const response = await getGenAI().models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `Phân tích câu lệnh của người dùng và chuyển đổi thành thông tin task.
 Đầu vào: "${inputText}"
@@ -88,7 +99,7 @@ export async function splitTaskIntoMicroSteps(
   parentDescription?: string
 ): Promise<{ title: string; estimated_min: number; energy_level: EnergyLevel }[]> {
   try {
-    const response = await ai.models.generateContent({
+    const response = await getGenAI().models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `Bạn là chuyên gia tư vấn năng suất chống trì hoãn.
 Nhiệm vụ của bạn là rã nhỏ một công việc lớn và gây nản lòng thành 2 đến 3 bước hành động cực kỳ dễ bắt đầu (micro-steps).
