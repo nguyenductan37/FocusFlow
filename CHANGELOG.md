@@ -8,14 +8,14 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 ## [1.4.0] — 2026-06-09
 
 ### Added
-- **PB-F1 (Trợ lý thiết lập nhanh bằng AI):** Tích hợp thanh nhập liệu thông minh `AIParsingBar` ngay trên giao diện Dashboard. Sử dụng SDK `@google/genai` gọi mô hình `gemini-2.5-flash` ở phía client để tự động trích xuất thông tin task từ ngôn ngữ tự nhiên tiếng Việt qua Structured Outputs (JSON Schema).
-- **PB-F2 (Hệ thống Giới hạn Trì hoãn & Đổi góc nhìn - Anti-Doom-Pile):** Tích hợp nhãn cảnh báo `⚠️ Bị dời hạn quá 3 lần` và nút `🧩 Rã nhỏ bước hành động` trong thẻ task của danh sách. Gọi Gemini AI để chia tách task lớn trì hoãn thành các task con có thời lượng ngắn (5 - 15 phút), mức năng lượng thấp (`LOW`/`MEDIUM`) và thay thế task gốc.
-- **Trợ lý Gemini Utility:** Khởi tạo helper `src/utils/gemini.ts` đóng gói các logic gọi API AI: `parseNaturalLanguageTask` (PB-F1) và `splitTaskIntoMicroSteps` (PB-F2) sử dụng Structured Outputs.
+- **Trợ lý thêm công việc thông minh bằng AI:** Thêm thanh nhập liệu tự nhiên trên trang chủ. Người dùng chỉ cần gõ nội dung công việc bằng tiếng Việt thông thường (ví dụ: "Họp phòng lúc 2h chiều"), hệ thống sẽ tự động nhận diện và điền sẵn tiêu đề, thời lượng, mức độ ưu tiên và giờ hẹn phù hợp.
+- **Hệ thống ngăn ngừa dồn ứ công việc (Anti-Doom-Pile):** Giúp người dùng giải quyết việc lớn bị trì hoãn nhiều lần. Khi một công việc bị đổi lịch quá 3 lần, hệ thống sẽ hiện cảnh báo màu cam kèm nút "Rã nhỏ bước hành động". Nhấn nút này, trí tuệ nhân tạo sẽ chia công việc lớn đó thành 2-3 đầu việc siêu nhỏ, dễ làm (chỉ mất 5-15 phút) để người dùng bắt tay vào làm ngay mà không bị nản.
+- **Tính năng tự động hóa và xử lý AI ngầm:** Xây dựng bộ xử lý thông minh để kết nối, truyền tải thông tin và chuyển đổi yêu cầu của người dùng thành các cấu trúc công việc cụ thể.
 
 ### Changed
-- **Cấu hình môi trường:** Chuyển đổi biến `GEMINI_API_KEY` thành `VITE_GEMINI_API_KEY` trong tệp `.env` để cho phép phía client Vite truy cập khóa an toàn.
-- **Kế hoạch & Backlog:** Cập nhật trạng thái backlog, hoàn thành tài liệu kế hoạch Sprint 1 (`docs/plans/sprintbacklog_1.md` và `docs/plans/sprintbacklog_2.md`).
-- **Mô hình Task:** Thêm trường `postpone_count?: number` để đếm số lần đổi ngày hết hạn.
+- **Nâng cấp độ ổn định của hệ thống:** Cải tiến cơ chế kết nối với trí tuệ nhân tạo để tránh làm sập hay treo ứng dụng ngay cả khi chưa thiết lập khóa kết nối (API Key). Hệ thống sẽ chạy bình thường các tính năng cơ bản và chỉ hiện thông báo nhắc nhở khi dùng đến tính năng thông minh.
+- **Cập nhật tài liệu dự án:** Hoàn thiện kế hoạch phát triển chi tiết cho các giai đoạn tiếp theo để dễ dàng theo dõi tiến độ.
+- **Mở rộng thông tin công việc:** Cho phép hệ thống lưu trữ thêm số lần trì hoãn và lý do dời lịch của từng công việc để phục vụ cho việc thống kê, đánh giá hiệu quả cá nhân.
 
 ## [1.3.0] — 2026-06
 
