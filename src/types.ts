@@ -24,6 +24,7 @@ export interface Task {
   scheduled_at?: string;       // Giờ bắt đầu dạng hàng ngày (ví dụ: "09:00" hoặc "14:30")
   completed_at?: string;       // Timestamp khi hoàn thành
   due_date?: string;           // Ngày cần làm (YYYY-MM-DD)
+  postpone_count?: number;     // Số lần task bị dời due_date sang ngày khác
 }
 
 export interface EnergyStatus {

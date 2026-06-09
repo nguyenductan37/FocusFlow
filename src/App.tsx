@@ -30,6 +30,8 @@ import DecisionAssistant from './components/DecisionAssistant';
 import ClosureModal from './components/ClosureModal';
 import TaskFormModal from './components/TaskFormModal';
 import GrowthDashboard from './components/GrowthDashboard';
+import AIParsingBar from './components/AIParsingBar';
+import { splitTaskIntoMicroSteps } from './utils/gemini';
 
 export default function App() {
   // ---- 1. CORE APPLICATION STATE ----
@@ -37,6 +39,7 @@ export default function App() {
   const [energyScore, setEnergyScore] = useState<number>(100);
   const [isOffMode, setIsOffMode] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'growth'>('dashboard');
+  const [isSplittingTaskId, setIsSplittingTaskId] = useState<string | null>(null);
 
   // Real-time local clock (for precise EOD boundary & tracking)
   const [currentTime, setCurrentTime] = useState<string>(() => {
@@ -104,6 +107,12 @@ export default function App() {
       // Edit mode
       const updated = tasks.map((t) => {
         if (t.id === taskData.id) {
+          // Check if due_date was postponed
+          let newPostponeCount = t.postpone_count || 0;
+          if (taskData.due_date && t.due_date && taskData.due_date > t.due_date) {
+            newPostponeCount += 1;
+          }
+
           return {
             ...t,
             title: taskData.title,
@@ -115,6 +124,7 @@ export default function App() {
             scheduled_at: taskData.scheduled_at,
             status: taskData.status,
             due_date: taskData.due_date,
+            postpone_count: newPostponeCount,
           };
         }
         return t;
@@ -233,6 +243,7 @@ export default function App() {
           due_date: tomorrowStr,
           status: 'TODO' as const,
           scheduled_at: undefined, // let them reschedule fresh!
+          postpone_count: (t.postpone_count || 0) + 1,
         };
       }
       return t;
@@ -240,6 +251,41 @@ export default function App() {
 
     saveTasksToStorage(updated);
     alert('Đã đóng ngày hoàn thiện! Trạng thái OFF đã được kích hoạt. Hãy tận hưởng kỳ nghỉ ngắn ngắt kết nối tâm lý tốt nhất! 🌸');
+  };
+
+  // PB-F2: Split large deferred task into micro steps
+  const handleSplitTask = async (taskId: string) => {
+    const parentTask = tasks.find((t) => t.id === taskId);
+    if (!parentTask) return;
+
+    setIsSplittingTaskId(taskId);
+    try {
+      const microSteps = await splitTaskIntoMicroSteps(parentTask.title, parentTask.description);
+      
+      if (microSteps.length > 0) {
+        const newTasks: Task[] = microSteps.map((step, index) => ({
+          id: `t-split-${Date.now()}-${index}`,
+          title: step.title,
+          description: `Được rã nhỏ từ: ${parentTask.title}`,
+          status: 'TODO' as const,
+          category: parentTask.category,
+          eisenhower_q: parentTask.eisenhower_q,
+          energy_level: step.energy_level,
+          estimated_min: step.estimated_min,
+          due_date: parentTask.due_date,
+        }));
+
+        // Remove parent task and add new micro tasks
+        const updatedTasks = [...tasks.filter((t) => t.id !== taskId), ...newTasks];
+        saveTasksToStorage(updatedTasks);
+      } else {
+        alert('Không thể rã nhỏ task này. Vui lòng thử lại!');
+      }
+    } catch (error: any) {
+      alert(`Có lỗi xảy ra khi rã nhỏ: ${error?.message || 'Vui lòng thử lại sau!'}`);
+    } finally {
+      setIsSplittingTaskId(null);
+    }
   };
 
   const handleOpenCreateWithPresets = (duration?: number, hour?: string) => {
@@ -397,6 +443,9 @@ export default function App() {
                 </div>
               </div>
 
+              {/* AI Auto-Triage Bar */}
+              <AIParsingBar onTaskCreated={handleSaveTask} />
+
               {/* Task list Column widget */}
               <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-xs">
                 <div className="flex items-center justify-between pb-3.5 border-b border-gray-100 mb-4 flex-wrap gap-2">
@@ -418,6 +467,8 @@ export default function App() {
                     setIsTaskModalOpen(true);
                   }}
                   onOpenCreateTask={() => handleOpenCreateWithPresets()}
+                  onSplitTask={handleSplitTask}
+                  isSplittingTaskId={isSplittingTaskId}
                 />
               </div>
 

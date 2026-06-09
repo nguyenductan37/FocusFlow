@@ -5,6 +5,18 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 
 ---
 
+## [1.4.0] — 2026-06-09
+
+### Added
+- **PB-F1 (Trợ lý thiết lập nhanh bằng AI):** Tích hợp thanh nhập liệu thông minh `AIParsingBar` ngay trên giao diện Dashboard. Sử dụng SDK `@google/genai` gọi mô hình `gemini-2.5-flash` ở phía client để tự động trích xuất thông tin task từ ngôn ngữ tự nhiên tiếng Việt qua Structured Outputs (JSON Schema).
+- **PB-F2 (Hệ thống Giới hạn Trì hoãn & Đổi góc nhìn - Anti-Doom-Pile):** Tích hợp nhãn cảnh báo `⚠️ Bị dời hạn quá 3 lần` và nút `🧩 Rã nhỏ bước hành động` trong thẻ task của danh sách. Gọi Gemini AI để chia tách task lớn trì hoãn thành các task con có thời lượng ngắn (5 - 15 phút), mức năng lượng thấp (`LOW`/`MEDIUM`) và thay thế task gốc.
+- **Trợ lý Gemini Utility:** Khởi tạo helper `src/utils/gemini.ts` đóng gói các logic gọi API AI: `parseNaturalLanguageTask` (PB-F1) và `splitTaskIntoMicroSteps` (PB-F2) sử dụng Structured Outputs.
+
+### Changed
+- **Cấu hình môi trường:** Chuyển đổi biến `GEMINI_API_KEY` thành `VITE_GEMINI_API_KEY` trong tệp `.env` để cho phép phía client Vite truy cập khóa an toàn.
+- **Kế hoạch & Backlog:** Cập nhật trạng thái backlog, hoàn thành tài liệu kế hoạch Sprint 1 (`docs/plans/sprintbacklog_1.md` và `docs/plans/sprintbacklog_2.md`).
+- **Mô hình Task:** Thêm trường `postpone_count?: number` để đếm số lần đổi ngày hết hạn.
+
 ## [1.3.0] — 2026-06
 
 ### Improved
