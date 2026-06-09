@@ -5,6 +5,16 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 
 ---
 
+## [1.4.0] — 2026-06-09
+
+### Added
+- **PB-F1 (Trợ lý thiết lập nhanh bằng AI):** Tích hợp thanh nhập liệu thông minh `AIParsingBar` ngay trên giao diện Dashboard. Sử dụng SDK `@google/genai` gọi mô hình `gemini-2.5-flash` ở phía client để tự động trích xuất thông tin task từ ngôn ngữ tự nhiên tiếng Việt qua Structured Outputs (JSON Schema).
+- **Trợ lý Gemini Utility:** Khởi tạo helper `src/utils/gemini.ts` đóng gói logic gọi API AI và phân tích các trường dữ liệu của Task (tiêu đề, danh mục, thời lượng, ma trận ưu tiên, năng lượng, giờ bắt đầu và hạn ngày).
+
+### Changed
+- **Cấu hình môi trường:** Chuyển đổi biến `GEMINI_API_KEY` thành `VITE_GEMINI_API_KEY` trong tệp `.env` để cho phép phía client Vite truy cập khóa an toàn.
+- **Kế hoạch & Backlog:** Cập nhật tài liệu `docs/backlog/backlog.md` (chuyển đổi trạng thái sang đã refine đối với PB-F1 và PB-F6) và bổ sung kế hoạch triển khai chi tiết Sprint 1 tại `docs/plans/sprintbacklog_1.md`.
+
 ## [1.3.0] — 2026-06
 
 ### Improved

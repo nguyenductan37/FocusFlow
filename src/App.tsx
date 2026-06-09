@@ -30,6 +30,7 @@ import DecisionAssistant from './components/DecisionAssistant';
 import ClosureModal from './components/ClosureModal';
 import TaskFormModal from './components/TaskFormModal';
 import GrowthDashboard from './components/GrowthDashboard';
+import AIParsingBar from './components/AIParsingBar';
 
 export default function App() {
   // ---- 1. CORE APPLICATION STATE ----
@@ -396,6 +397,9 @@ export default function App() {
                   )}
                 </div>
               </div>
+
+              {/* AI Auto-Triage Bar */}
+              <AIParsingBar onTaskCreated={handleSaveTask} />
 
               {/* Task list Column widget */}
               <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-xs">
