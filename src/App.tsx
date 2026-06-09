@@ -32,6 +32,8 @@ import TaskFormModal from './components/TaskFormModal';
 import GrowthDashboard from './components/GrowthDashboard';
 import AIParsingBar from './components/AIParsingBar';
 import { splitTaskIntoMicroSteps } from './utils/gemini';
+import FocusOverlay from './components/FocusOverlay';
+import { playFocusAlertSound } from './utils/focusUtils';
 
 export default function App() {
   // ---- 1. CORE APPLICATION STATE ----
@@ -40,6 +42,7 @@ export default function App() {
   const [isOffMode, setIsOffMode] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'growth'>('dashboard');
   const [isSplittingTaskId, setIsSplittingTaskId] = useState<string | null>(null);
+  const [focusTask, setFocusTask] = useState<Task | null>(null);
 
   // Real-time local clock (for precise EOD boundary & tracking)
   const [currentTime, setCurrentTime] = useState<string>(() => {
@@ -55,6 +58,27 @@ export default function App() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // PB-F6: Trigger Focus Mode when time matches
+  useEffect(() => {
+    if (focusTask) return;
+    
+    const today = getTodayDateString();
+    
+    const scheduledTask = tasks.find(t => 
+      t.due_date === today &&
+      t.scheduled_at === currentTime &&
+      t.status !== 'DONE' &&
+      (t.category === 'Làm việc' || t.category === 'Học tập') &&
+      (t.eisenhower_q === 'Q1' || t.eisenhower_q === 'Q2') &&
+      (t.energy_level === 'HIGH' || t.energy_level === 'MEDIUM')
+    );
+
+    if (scheduledTask) {
+      playFocusAlertSound();
+      setFocusTask(scheduledTask);
+    }
+  }, [currentTime, tasks, focusTask]);
 
   // Modal Control States
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -288,6 +312,42 @@ export default function App() {
     }
   };
 
+  // Handlers for FocusOverlay (PB-F6)
+  const handleFocusComplete = (actualMin: number) => {
+    if (!focusTask) return;
+    const updated = tasks.map((t) => {
+      if (t.id === focusTask.id) {
+        return {
+          ...t,
+          status: 'DONE' as const,
+          completed_at: new Date().toISOString(),
+          actual_min: (t.actual_min || 0) + actualMin,
+        };
+      }
+      return t;
+    });
+    saveTasksToStorage(updated);
+    setFocusTask(null);
+    setEnergyScore((curr) => Math.max(0, curr - 15)); // Drain energy after deep work
+  };
+
+  const handleFocusDefer = (reason: string) => {
+    if (!focusTask) return;
+    const updated = tasks.map((t) => {
+      if (t.id === focusTask.id) {
+        return {
+          ...t,
+          status: 'TODO' as const, // Reset to TODO
+          postpone_count: (t.postpone_count || 0) + 1,
+          postpone_reasons: [...(t.postpone_reasons || []), reason],
+        };
+      }
+      return t;
+    });
+    saveTasksToStorage(updated);
+    setFocusTask(null);
+  };
+
   const handleOpenCreateWithPresets = (duration?: number, hour?: string) => {
     setDefaultDuration(duration);
     setDefaultHour(hour);
@@ -327,6 +387,15 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-gray-800 transition-colors duration-300">
       
+      {/* Focus Mode Overlay (PB-F6) */}
+      {focusTask && (
+        <FocusOverlay
+          task={focusTask}
+          onComplete={handleFocusComplete}
+          onDefer={handleFocusDefer}
+        />
+      )}
+
       {/* 🌸 OFF MODE OVERLAY WRAPPER BAR (AC-PB2-04) */}
       {isOffMode && (
         <div id="off-mode-floating-banner" className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white p-4 text-center text-xs font-bold shadow-md flex items-center justify-center gap-4 flex-wrap animate-fade-in">

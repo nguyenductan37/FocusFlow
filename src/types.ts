@@ -25,6 +25,7 @@ export interface Task {
   completed_at?: string;       // Timestamp khi hoàn thành
   due_date?: string;           // Ngày cần làm (YYYY-MM-DD)
   postpone_count?: number;     // Số lần task bị dời due_date sang ngày khác
+  postpone_reasons?: string[]; // Lý do hoãn task (PB-F6)
 }
 
 export interface EnergyStatus {
