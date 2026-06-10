@@ -189,10 +189,3 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 | **MAJOR** | Breaking change hoặc ra mắt Epic mới hoàn chỉnh |
 | **MINOR** | Hoàn thành 1 Sprint (thêm feature không phá vỡ) |
 | **PATCH** | Bug fix, cải thiện hiệu năng, UX tweak nhỏ |
-
----
-
-Bạn có muốn mình điều chỉnh thêm phần nào không? Ví dụ:
-- Gộp các mục nhỏ từ `[1.1.0]` → `[1.3.0]` lại cho gọn?
-- Thêm liên kết so sánh (diff links) cho từng phiên bản?
-- Chuyển các mục "Added" thành dạng danh sách có biểu tượng (emoji) như trong file gốc của bạn?
