@@ -21,7 +21,7 @@ import {
   Trophy,
   Undo
 } from 'lucide-react';
-import { Task, TaskCategory, TaskStatus, Chronotype } from './types';
+import { Task, TaskCategory, TaskStatus, Chronotype, BioPetState } from './types';
 import { INITIAL_TASLES, getTodayDateString, getYesterdayDateString } from './utils/dummyData';
 import TaskList from './components/TaskList';
 import Scheduler from './components/Scheduler';
@@ -35,6 +35,7 @@ import { splitTaskIntoMicroSteps } from './utils/gemini';
 import FocusOverlay from './components/FocusOverlay';
 import { playFocusAlertSound } from './utils/focusUtils';
 import ChronotypeSurveyModal from './components/ChronotypeSurveyModal';
+import BioPetWidget from './components/BioPetWidget';
 
 export default function App() {
   // ---- 1. CORE APPLICATION STATE ----
@@ -46,6 +47,12 @@ export default function App() {
   const [focusTask, setFocusTask] = useState<Task | null>(null);
   const [chronotype, setChronotype] = useState<Chronotype>(null);
   const [isSurveyOpen, setIsSurveyOpen] = useState(false);
+
+  // Bio-Companion State
+  const [petState, setPetState] = useState<BioPetState>(() => {
+    const saved = localStorage.getItem('focusflow_pet_state');
+    return saved ? JSON.parse(saved) : { level: 1, xp: 0, name: 'Linh Vật' };
+  });
 
   // Real-time local clock (for precise EOD boundary & tracking)
   const [currentTime, setCurrentTime] = useState<string>(() => {
@@ -129,6 +136,34 @@ export default function App() {
   const saveTasksToStorage = (updatedTasks: Task[]) => {
     setTasks(updatedTasks);
     localStorage.setItem('focusflow_tasks', JSON.stringify(updatedTasks));
+  };
+
+  const updatePetXp = (amount: number, checkGoldenHour: boolean = false) => {
+    let finalAmount = amount;
+    if (checkGoldenHour && chronotype) {
+      const [h] = currentTime.split(':').map(Number);
+      let isGolden = false;
+      if (chronotype === 'EARLY_BIRD' && h >= 8 && h < 11) isGolden = true;
+      if (chronotype === 'NIGHT_OWL' && h >= 20 && h < 22) isGolden = true;
+      if (chronotype === 'THIRD_BIRD' && ((h >= 9 && h < 11) || (h >= 15 && h < 17))) isGolden = true;
+      
+      if (isGolden) finalAmount *= 2;
+    }
+
+    setPetState(prev => {
+      let newXp = prev.xp + finalAmount;
+      let newLevel = prev.level;
+      const xpMax = newLevel * 100;
+
+      if (newXp >= xpMax) {
+        newLevel += 1;
+        newXp -= xpMax;
+      }
+
+      const newState = { ...prev, xp: newXp, level: newLevel };
+      localStorage.setItem('focusflow_pet_state', JSON.stringify(newState));
+      return newState;
+    });
   };
 
   // ---- 4. HANDLERS AND EVENT ACTIONS ----
@@ -232,6 +267,11 @@ export default function App() {
     });
 
     saveTasksToStorage(updated);
+    
+    // Bio-Pet logic
+    if (isNowDone) {
+      updatePetXp(20, match.energy_level === 'HIGH');
+    }
   };
 
   const handleStartTaskInstantly = (taskId: string) => {
@@ -248,6 +288,7 @@ export default function App() {
   const handleTakeBreak = () => {
     setEnergyScore(100);
     localStorage.setItem('focusflow_energy', '100');
+    updatePetXp(5);
   };
 
   // Exit OFF Mode (AC-PB2-05)
@@ -282,6 +323,7 @@ export default function App() {
     });
 
     saveTasksToStorage(updated);
+    updatePetXp(25);
     alert('Đã đóng ngày hoàn thiện! Trạng thái OFF đã được kích hoạt. Hãy tận hưởng kỳ nghỉ ngắn ngắt kết nối tâm lý tốt nhất! 🌸');
   };
 
@@ -337,6 +379,7 @@ export default function App() {
     saveTasksToStorage(updated);
     setFocusTask(null);
     setEnergyScore((curr) => Math.max(0, curr - 15)); // Drain energy after deep work
+    updatePetXp(15, focusTask.energy_level === 'HIGH');
   };
 
   const handleFocusDefer = (reason: string) => {
@@ -369,6 +412,14 @@ export default function App() {
     setChronotype(ct);
     localStorage.setItem('focusflow_chronotype', ct || '');
     setIsSurveyOpen(false);
+  };
+
+  const handleRenamePet = (newName: string) => {
+    setPetState(prev => {
+      const newState = { ...prev, name: newName };
+      localStorage.setItem('focusflow_pet_state', JSON.stringify(newState));
+      return newState;
+    });
   };
 
   // ---- 5. COMPUTED VALUES ----
@@ -633,6 +684,14 @@ export default function App() {
         isOpen={isSurveyOpen}
         onClose={() => setIsSurveyOpen(false)}
         onComplete={handleSurveyComplete}
+      />
+
+      {/* Bio-Pet Widget */}
+      <BioPetWidget 
+        chronotype={chronotype}
+        petState={petState}
+        onRenamePet={handleRenamePet}
+        onStartSurvey={() => setIsSurveyOpen(true)}
       />
 
       {/* Footer credits block without tech larping or online metadata Indicators */}

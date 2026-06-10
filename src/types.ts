@@ -13,6 +13,12 @@ export type TaskCategory = 'Làm việc' | 'Học tập' | 'Admin';
 
 export type Chronotype = 'EARLY_BIRD' | 'NIGHT_OWL' | 'THIRD_BIRD' | null;
 
+export interface BioPetState {
+  level: number;
+  xp: number;
+  name?: string;
+}
+
 export interface Task {
   id: string;
   title: string;
