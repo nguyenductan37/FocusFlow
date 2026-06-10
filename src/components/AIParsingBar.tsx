@@ -6,13 +6,14 @@
 import React, { useState } from 'react';
 import { Loader2, Sparkles, Send } from 'lucide-react';
 import { parseNaturalLanguageTask } from '../utils/gemini';
-import { Task } from '../types';
+import { Task, Chronotype } from '../types';
 
 interface AIParsingBarProps {
+  chronotype?: Chronotype | null;
   onTaskCreated: (taskData: Omit<Task, 'id' | 'completed_at'> & { id?: string }) => void;
 }
 
-export default function AIParsingBar({ onTaskCreated }: AIParsingBarProps) {
+export default function AIParsingBar({ chronotype, onTaskCreated }: AIParsingBarProps) {
   const [inputText, setInputText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -28,7 +29,7 @@ export default function AIParsingBar({ onTaskCreated }: AIParsingBarProps) {
 
     try {
       // Gọi thư viện AI để trích xuất thông tin
-      const parsedTask = await parseNaturalLanguageTask(inputText);
+      const parsedTask = await parseNaturalLanguageTask(inputText, chronotype);
 
       // Nếu thành công, đóng gói lại và gọi hàm lưu
       // Đảm bảo các thuộc tính required đều có mặt

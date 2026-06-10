@@ -1,0 +1,116 @@
+# Phân tích Kỹ thuật & Thiết kế Chức năng Sprint 3: PB-F3 - Nhịp sinh học Cá nhân hóa (Chronobiology Profile)
+
+Tài liệu này phân tích chi tiết về mặt nghiệp vụ, giao diện trải nghiệm người dùng (UI/UX) và phương án triển khai kỹ thuật cho tính năng **Nhịp sinh học Cá nhân hóa (PB-F3)** của dự án **FocusFlow** trong **Sprint 3**.
+
+---
+
+## 1. Phân tích Nghiệp vụ (Requirements Analysis)
+
+*   **Vấn đề:** Mỗi người có một đồng hồ sinh học khác nhau (nhóm Sơn ca hoạt động tốt buổi sáng, nhóm Cú đêm hoạt động tốt buổi tối). Việc áp đặt một khung giờ cố định cho các tác vụ đòi hỏi sự tập trung cao độ (Deep Work) có thể làm giảm hiệu suất và gây căng thẳng tinh thần không cần thiết.
+*   **Giải pháp (PB-F3):**
+    1.  **Trắc nghiệm nhanh (Chronotype Assessment):** Cung cấp bộ câu hỏi trắc nghiệm ngắn (3 câu rút gọn từ bộ MEQ chuẩn hóa - Morningness-Eveningness Questionnaire) để nhận diện nhóm sinh học của người dùng.
+    2.  **Đồ thị năng lượng sinh học (24h Energy Curve):** Hiển thị trực quan mức năng lượng thay đổi theo thời gian trong ngày tương ứng với từng nhóm sinh học.
+    3.  **Tích hợp Lên lịch thông minh (Smart Schedule Suggestion):** Tự động điều chỉnh và gợi ý khung giờ thực hiện Deep Work (task Q1/Q2, energy HIGH/MEDIUM) phù hợp với nhịp sinh học của người dùng để tối ưu năng lượng tự nhiên.
+
+---
+
+## 2. Tiêu chí Acceptance Criteria (AC) của Sprint 3
+
+*   **SC1: Bộ Trắc nghiệm & Đồ thị Năng lượng:**
+    *   Người dùng có thể thực hiện trắc nghiệm 3 câu hỏi nhanh tại tab **Tăng Trưởng Kỹ Năng** hoặc một popup kích hoạt lần đầu.
+    *   Phân loại chính xác người dùng thành: **Sơn ca (Early Bird)**, **Cú đêm (Night Owl)**, hoặc **Chim bồ câu (Third Bird - Trung bình)**.
+    *   Hiển thị đồ thị năng lượng 24 giờ trực quan (sử dụng SVG hoặc CSS gradient) mô tả rõ ràng các điểm đỉnh (Peak - tập trung tối đa), đáy (Trough - mệt mỏi/nghỉ ngơi) và điểm hồi phục (Recovery).
+*   **SC2: Đề xuất & Dịch chuyển giờ vàng Deep Work:**
+    *   Nếu là **Cú đêm**: Hệ thống đề xuất Deep Work vào khung giờ **20:00 - 22:00** (hoặc 14:00 - 16:00).
+    *   Nếu là **Sơn ca**: Đề xuất Deep Work vào khung giờ **08:00 - 11:00**.
+    *   Nếu là **Chim bồ câu**: Đề xuất Deep Work vào khung giờ **09:00 - 11:30** hoặc **15:00 - 17:00**.
+    *   **Tương tác thông minh:** Khi người dùng lên lịch một task đòi hỏi năng lượng cao (HIGH) vào khung giờ đáy năng lượng, hệ thống sẽ hiển thị một gợi ý (nudge) khuyên người dùng dời lịch sang khung giờ vàng sinh học.
+
+---
+
+## 3. Thiết kế Bộ câu hỏi & Logic Phân loại (MEQ Rút gọn)
+
+Để đảm bảo không gây phiền hà cho người dùng (friction thấp), chúng ta chọn 3 câu hỏi cốt lõi nhất từ MEQ:
+
+### Câu 1: Khoảng thời gian nào bạn cảm thấy tỉnh táo và làm việc hiệu quả nhất?
+*   A. Sáng sớm (05:00 - 08:00) — *3 điểm*
+*   B. Buổi sáng & Trưa (08:00 - 12:00) — *2 điểm*
+*   C. Buổi chiều (13:00 - 17:00) — *1 điểm*
+*   D. Chiều tối & Đêm (18:00 - 23:00) — *0 điểm*
+
+### Câu 2: Nếu được tự do chọn giờ thức dậy để thoải mái nhất, bạn sẽ chọn mấy giờ?
+*   A. Rất sớm (05:00 - 06:30) — *3 điểm*
+*   B. Bình thường (06:30 - 08:30) — *2 điểm*
+*   C. Muộn (08:30 - 10:00) — *1 điểm*
+*   D. Rất muộn (Sau 10:00) — *0 điểm*
+
+### Câu 3: Bạn thường bắt đầu cảm thấy buồn ngủ và muốn đi ngủ vào lúc nào?
+*   A. Sớm (20:30 - 22:00) — *3 điểm*
+*   B. Bình thường (22:00 - 23:30) — *2 điểm*
+*   C. Muộn (23:30 - 01:00) — *1 điểm*
+*   D. Rất muộn (Sau 01:00) — *0 điểm*
+
+### Quy tắc Phân loại (Scoring Logic):
+*   **Tổng điểm $\ge 7$:** Nhóm **Sơn ca (Early Bird / Morning Lark)**.
+*   **Tổng điểm $4 - 6$:** Nhóm **Chim bồ câu (Third Bird / Intermediate)**.
+*   **Tổng điểm $\le 3$:** Nhóm **Cú đêm (Night Owl)**.
+
+---
+
+## 4. Thiết kế Giao diện (UI/UX Mockup)
+
+### 4.1. Tab Nhịp Sinh Học (trong Growth Dashboard)
+Khi người dùng chưa làm trắc nghiệm, phần này hiển thị banner:
+> **🔮 Khám phá Nhịp sinh học của bạn**
+> Làm bài trắc nghiệm 30 giây để tìm ra "giờ vàng" tập trung và tối ưu hóa lịch làm việc theo khoa học.
+> `[ Bắt đầu trắc nghiệm ]`
+
+Sau khi hoàn thành, giao diện sẽ hiển thị:
+1.  **Hồ sơ sinh học:** Tên nhóm sinh học kèm icon sinh động (ví dụ: `🦅 Nhóm Sơn ca (Early Bird)` hoặc `🦉 Nhóm Cú đêm (Night Owl)`).
+2.  **Đồ thị năng lượng 24h:** Một đường cong sinh học mềm mại biểu thị mức năng lượng từ 0% đến 100% qua 24 giờ.
+3.  **Khung giờ vàng đề xuất:** Liệt kê các khoảng thời gian vàng để làm việc sâu (Deep Work) và giờ nên nghỉ ngơi (Break Time).
+
+```
++-------------------------------------------------------------+
+|  🦉 NHỊP SINH HỌC: NHÓM CÚ ĐÊM (NIGHT OWL)                   |
+|  Hiệu suất của bạn đạt đỉnh cao nhất vào cuối ngày.           |
+|                                                             |
+|  Đồ thị năng lượng 24h:                                     |
+|  100% |             /\                                      |
+|   50% |  \_________/  \_____                                |
+|    0% +----------------------->                             |
+|       0h   6h    12h   18h  24h                             |
+|                                                             |
+|  ✨ Khung giờ vàng Deep Work đề xuất:                        |
+|  - Giờ Vàng Chính: 20:00 - 22:00 (Năng lượng 95%)           |
+|  - Giờ Vàng Phụ:   14:30 - 16:30 (Năng lượng 80%)           |
++-------------------------------------------------------------+
+```
+
+---
+
+## 5. Phương án Triển khai Kỹ thuật
+
+### 5.1. Cấu trúc dữ liệu lưu trữ
+Cần mở rộng thông tin người dùng trong `LocalStorage`:
+*   Key: `focusflow_chronotype` -> Giá trị: `'EARLY_BIRD' | 'NIGHT_OWL' | 'THIRD_BIRD'`.
+*   Key: `focusflow_chronotype_answers` -> Mảng chứa câu trả lời để hiển thị lại nếu cần.
+
+### 5.2. Công thức Đồ thị Năng lượng (Energy Curve Formula)
+Để vẽ đồ thị mượt mà bằng SVG `<path>`, chúng ta có thể sử dụng các hàm toán học mô phỏng theo từng nhóm sinh học:
+*   **Sơn ca (Early Bird):** $E(t) = 50 + 40 \cdot \sin(\pi \cdot (t - 4) / 10)$ với đỉnh năng lượng lớn nhất khoảng 9h - 10h sáng, đáy vào lúc 14h chiều và đi xuống từ sau 21h.
+*   **Cú đêm (Night Owl):** Trễ hơn Sơn ca khoảng 4-5 tiếng. Đỉnh năng lượng lớn nhất rơi vào 20h - 22h tối, mệt mỏi vào buổi sáng sớm (6h - 8h).
+
+### 5.3. Thuật toán gợi ý lịch trình (Scheduler Nudges)
+*   Trong component `Scheduler.tsx`, khi người dùng kéo thả hoặc đặt lịch một task có `energy_level === 'HIGH'` vào khung giờ có mức năng lượng dự báo thấp hơn **60%** (theo công thức trên):
+    *   Hiển thị một thông báo gợi ý màu vàng dịu: *"Bạn đang đặt việc Deep Work vào giờ thấp điểm năng lượng của bạn. Bạn có muốn chuyển sang [Giờ vàng gợi ý] không?"* kèm nút `[ Đồng ý chuyển ]`.
+
+---
+
+## 6. Kế hoạch Phát triển Từng bước (Implementation Steps)
+
+*   **Bước 1:** Thiết kế Component `ChronotypeSurveyModal.tsx` để hiển thị bộ 3 câu hỏi trắc nghiệm và tính điểm lưu vào LocalStorage.
+*   **Bước 2:** Xây dựng cấu phần `ChronobiologyCard.tsx` hiển thị kết quả phân loại, lời khuyên khoa học và đồ thị năng lượng SVG tương tác sinh động theo thời gian thực (đồ thị có đường line chạy dọc chỉ giờ hiện tại).
+*   **Bước 3:** Tích hợp logic gợi ý (Nudge Engine) vào `Scheduler.tsx` và `DecisionAssistant.tsx` để so khớp task năng lượng cao với giờ vàng sinh học.
+*   **Bước 4:** Bổ sung gợi ý tự động trong `AIParsingBar.tsx`: Nếu người dùng không nhập giờ, AI sẽ tự động xếp task Deep Work vào giờ vàng sinh học thay vì bỏ trống hoặc xếp ngẫu nhiên.
+*   **Bước 5:** Viết unit test và thử nghiệm trải nghiệm người dùng với các nhóm sinh học khác nhau.

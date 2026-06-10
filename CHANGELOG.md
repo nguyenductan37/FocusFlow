@@ -5,6 +5,26 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 
 ---
 
+## [1.5.0] — 2026-06-10
+
+### Added
+- **Khảo sát Nhịp sinh học (Chronotype Survey) & Đồ thị Năng lượng Sinh học 24h:**
+  - *Phân tích nghiệp vụ:* Mỗi cá nhân có đồng hồ sinh học khác nhau (Sơn Ca, Cú Đêm, hay Chim Bồ Câu). Việc áp đặt khung giờ tập trung cố định dễ gây mệt mỏi và giảm hiệu suất. Giải pháp là cung cấp khảo sát nhanh để cá nhân hóa lịch trình theo nhịp sinh học tự nhiên.
+  - *Tiêu chí AC:* 
+    - SC1: Trắc nghiệm 3 câu hỏi MEQ rút gọn tại tab "Tăng Trưởng Kỹ Năng" để phân loại chính xác nhóm Sơn ca (Early Bird), Cú đêm (Night Owl), hoặc Chim bồ câu (Third Bird).
+    - SC2: Hiển thị đồ thị năng lượng 24 giờ trực quan vẽ bằng SVG mô tả rõ các điểm đỉnh (Peak) và đáy (Trough).
+  - *Triển khai kỹ thuật:* 
+    - Xây dựng component `ChronotypeSurveyModal.tsx` để chấm điểm và lưu trạng thái vào `localStorage` dưới key `focusflow_chronotype`.
+    - Tạo component `ChronobiologyCard.tsx` vẽ đồ thị SVG `<path>` mượt mà theo phương trình hình sin mô phỏng mức năng lượng thay đổi theo thời gian của từng nhóm sinh học.
+- **Hệ thống Gợi ý Lịch trình Thông minh (Smart Scheduler Nudges):**
+  - *Phân tích nghiệp vụ:* Tránh việc người dùng lên lịch các công việc đòi hỏi tập trung cao (Deep Work) vào thời điểm năng lượng sinh học ở mức đáy (mệt mỏi/uể oải).
+  - *Tiêu chí AC:* Kích hoạt cảnh báo (Nudge) khi xếp task HIGH energy và Q1/Q2 nằm ngoài khung giờ vàng sinh học. Hỗ trợ nút chuyển nhanh sang giờ vàng chỉ bằng 1-click.
+  - *Triển khai kỹ thuật:* Tích hợp Nudge Engine vào `Scheduler.tsx` để so khớp giờ hẹn của task với khung giờ vàng của nhóm sinh học. Khi vi phạm, render banner cảnh báo màu vàng kèm nút `Chuyển lịch` gọi hàm callback `onUpdateTaskTime`.
+- **Trích xuất AI Tối ưu theo Sinh học (AIParsingBar Integration):**
+  - *Phân tích nghiệp vụ:* Tận dụng AI để tự động tối ưu hóa lịch trình ngay từ khâu tạo task bằng ngôn ngữ tự nhiên.
+  - *Tiêu chí AC:* Nếu người dùng không nhập thời gian cụ thể cho task HIGH energy, AI sẽ tự động gán vào khung giờ vàng sinh học tương ứng.
+  - *Triển khai kỹ thuật:* Mở rộng hàm `parseNaturalLanguageTask` trong `gemini.ts` để nhận tham số `chronotype`. Bổ sung chỉ dẫn (system context) vào prompt của Gemini 2.5 Flash để tự động điền giá trị `scheduled_at` tương ứng với giờ vàng của Sơn Ca (08:00 - 11:00), Cú Đêm (20:00 - 22:00), hoặc Bồ Câu (09:00 - 11:30) khi tạo task nặng năng lượng.
+
 ## [1.4.0] — 2026-06-09
 
 ### Added
