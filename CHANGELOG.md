@@ -5,6 +5,23 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 
 ---
 
+## [1.6.0] — 2026-06-10
+
+### Added
+- **Sinh Vật Nhịp Sinh Học (Bio-Companion) & Cá Nhân Hóa Tên Ứng Dụng:**
+  - *Phân tích nghiệp vụ:* Nhằm tăng tính tương tác, tạo động lực tâm lý tích cực để duy trì lối sống lành mạnh và tránh cảm giác nhàm chán khi thực hiện lịch trình làm việc. Đồng thời tối ưu hóa tính nhận diện thương hiệu của ứng dụng.
+  - *Tiêu chí AC:*
+    - SC1: Hiển thị quả trứng lắc lư khi chưa làm trắc nghiệm sinh học. Nhấp vào quả trứng hiển thị bong bóng thoại và nút hướng dẫn mở modal trắc nghiệm.
+    - SC2: Nở ra linh vật Sơn Ca (vàng nhấp nhô), Cú Đêm (xanh lam phồng xẹp), hoặc Bồ Câu (lục nhạt nghiêng đầu) sau khi khảo sát hoàn tất.
+    - SC3: Chuyển sang trạng thái mệt mỏi (ngái ngủ kèm chữ "Zzz" bay lên và icon Mặt Trăng) khi làm việc quá giờ ngủ sinh học.
+    - SC4: Tích lũy điểm Bio-XP từ mọi hành động lành mạnh (Xong việc, chạy Pomodoro, Take Break, EOD), nhân đôi (x2) điểm khi làm việc trong khung giờ vàng sinh học. Cho phép đổi tên linh vật trực tiếp.
+    - SC5: Hiển thị tiêu đề tab trình duyệt của ứng dụng là "FocusFlow".
+  - *Triển khai kỹ thuật:*
+    - Định nghĩa cấu trúc dữ liệu `BioPetState` trong `src/types.ts`.
+    - Xây dựng component `BioPetWidget.tsx` sử dụng SVG thuần vẽ tạo hình linh vật và xử lý hoạt họa (wobble, bounce, breath) qua CSS `@keyframes` để tối ưu hóa hiệu năng client-side.
+    - Tích hợp logic tính điểm `updatePetXp` vào các hàm xử lý sự kiện trung tâm trong `App.tsx` và đồng bộ trạng thái thăng cấp qua `localStorage` (key `focusflow_pet_state`).
+    - Cập nhật thẻ `<title>` trong `index.html` thành "FocusFlow".
+
 ## [1.5.0] — 2026-06-10
 
 ### Added
