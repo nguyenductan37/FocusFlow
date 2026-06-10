@@ -21,7 +21,7 @@ import {
   Trophy,
   Undo
 } from 'lucide-react';
-import { Task, TaskCategory, TaskStatus } from './types';
+import { Task, TaskCategory, TaskStatus, Chronotype } from './types';
 import { INITIAL_TASLES, getTodayDateString, getYesterdayDateString } from './utils/dummyData';
 import TaskList from './components/TaskList';
 import Scheduler from './components/Scheduler';
@@ -34,6 +34,7 @@ import AIParsingBar from './components/AIParsingBar';
 import { splitTaskIntoMicroSteps } from './utils/gemini';
 import FocusOverlay from './components/FocusOverlay';
 import { playFocusAlertSound } from './utils/focusUtils';
+import ChronotypeSurveyModal from './components/ChronotypeSurveyModal';
 
 export default function App() {
   // ---- 1. CORE APPLICATION STATE ----
@@ -43,6 +44,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'growth'>('dashboard');
   const [isSplittingTaskId, setIsSplittingTaskId] = useState<string | null>(null);
   const [focusTask, setFocusTask] = useState<Task | null>(null);
+  const [chronotype, setChronotype] = useState<Chronotype>(null);
+  const [isSurveyOpen, setIsSurveyOpen] = useState(false);
 
   // Real-time local clock (for precise EOD boundary & tracking)
   const [currentTime, setCurrentTime] = useState<string>(() => {
@@ -95,6 +98,11 @@ export default function App() {
     const savedTasks = localStorage.getItem('focusflow_tasks');
     const savedEnergy = localStorage.getItem('focusflow_energy');
     const savedOffMode = localStorage.getItem('focusflow_is_off_mode');
+    const savedChronotype = localStorage.getItem('focusflow_chronotype');
+
+    if (savedChronotype) {
+      setChronotype(savedChronotype as Chronotype);
+    }
 
     if (savedTasks) {
       try {
@@ -357,6 +365,12 @@ export default function App() {
     setIsTaskModalOpen(true);
   };
 
+  const handleSurveyComplete = (ct: Chronotype) => {
+    setChronotype(ct);
+    localStorage.setItem('focusflow_chronotype', ct || '');
+    setIsSurveyOpen(false);
+  };
+
   // ---- 5. COMPUTED VALUES ----
 
   // Active uncompleted tasks for today
@@ -512,8 +526,8 @@ export default function App() {
                 </div>
               </div>
 
-              {/* AI Auto-Triage Bar */}
-              <AIParsingBar onTaskCreated={handleSaveTask} />
+              {/* PB-F1: AI Task creation bar */}
+              <AIParsingBar chronotype={chronotype} onTaskCreated={handleSaveTask} />
 
               {/* Task list Column widget */}
               <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-xs">
@@ -571,6 +585,7 @@ export default function App() {
               {/* Day scheduled chronological view */}
               <Scheduler
                 tasks={tasks}
+                chronotype={chronotype}
                 onUpdateTaskTime={handleUpdateTaskTime}
                 onOpenCreateTask={(hour) => handleOpenCreateWithPresets(25, hour)}
                 onSelectTaskToEdit={(t) => {
@@ -586,6 +601,8 @@ export default function App() {
           // Tab 2: Performance Growth Dashboard
           <GrowthDashboard
             tasks={tasks}
+            chronotype={chronotype}
+            onTakeSurvey={() => setIsSurveyOpen(true)}
           />
         )}
       </main>
@@ -610,6 +627,12 @@ export default function App() {
         tasks={tasks}
         onClose={() => setIsClosureOpen(false)}
         onConfirmClosure={handleConfirmClosure}
+      />
+
+      <ChronotypeSurveyModal
+        isOpen={isSurveyOpen}
+        onClose={() => setIsSurveyOpen(false)}
+        onComplete={handleSurveyComplete}
       />
 
       {/* Footer credits block without tech larping or online metadata Indicators */}

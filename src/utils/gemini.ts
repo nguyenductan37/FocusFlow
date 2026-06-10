@@ -4,7 +4,7 @@
  */
 
 import { GoogleGenAI, Type } from '@google/genai';
-import { Task, EnergyLevel } from '../types';
+import { Task, EnergyLevel, Chronotype } from '../types';
 import { getTodayDateString } from './dummyData';
 
 // Khởi tạo Client GenAI bằng API Key từ Vite env theo cơ chế Lazy Initialization
@@ -25,7 +25,7 @@ function getGenAI(): GoogleGenAI {
 /**
  * PB-F1: Xử lý ngôn ngữ tự nhiên để tự động tạo Task (AI Auto-Triage)
  */
-export async function parseNaturalLanguageTask(inputText: string): Promise<Partial<Task>> {
+export async function parseNaturalLanguageTask(inputText: string, chronotype?: Chronotype | null): Promise<Partial<Task>> {
   try {
     const response = await getGenAI().models.generateContent({
       model: 'gemini-2.5-flash',
@@ -33,6 +33,9 @@ export async function parseNaturalLanguageTask(inputText: string): Promise<Parti
 Đầu vào: "${inputText}"
 Hạn ngày (due_date) mặc định luôn là ngày hôm nay (${getTodayDateString()}) nếu không có yêu cầu đặc biệt.
 Hãy thiết lập một khung giờ bắt đầu hợp lý (scheduled_at) nếu người dùng có nhắc đến (nhớ tự chuyển đổi giờ như "5h chiều" thành 17:00).
+${chronotype === 'EARLY_BIRD' ? 'LƯU Ý: Người dùng là nhóm Sơn Ca. Nếu việc thuộc mức năng lượng HIGH và chưa rõ giờ, hãy mặc định xếp vào khung giờ vàng (08:00 - 11:00).' : ''}
+${chronotype === 'NIGHT_OWL' ? 'LƯU Ý: Người dùng là nhóm Cú Đêm. Nếu việc thuộc mức năng lượng HIGH và chưa rõ giờ, hãy mặc định xếp vào khung giờ vàng (20:00 - 22:00).' : ''}
+${chronotype === 'THIRD_BIRD' ? 'LƯU Ý: Người dùng là nhóm Bồ Câu. Nếu việc thuộc mức năng lượng HIGH và chưa rõ giờ, hãy mặc định xếp vào khung giờ vàng (09:00 - 11:30).' : ''}
 Nếu không nhắc thời lượng, hãy ước lượng một số nguyên phút phù hợp với tính chất việc.`,
       config: {
         responseMimeType: 'application/json',

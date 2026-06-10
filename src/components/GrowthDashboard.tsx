@@ -5,14 +5,17 @@
 
 import React, { useMemo, useState } from 'react';
 import { Award, BarChart3, Brain, CheckSquare, Clock, ArrowUpRight, TrendingUp, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
-import { Task } from '../types';
+import { Task, Chronotype } from '../types';
 import { MOCK_HISTORIC_WEEKS } from '../utils/dummyData';
+import ChronobiologyCard from './ChronobiologyCard';
 
 interface GrowthDashboardProps {
   tasks: Task[];
+  chronotype: Chronotype;
+  onTakeSurvey: () => void;
 }
 
-export default function GrowthDashboard({ tasks }: GrowthDashboardProps) {
+export default function GrowthDashboard({ tasks, chronotype, onTakeSurvey }: GrowthDashboardProps) {
   const [showFormula, setShowFormula] = useState(false);
   // 📈 1. Ratio computation (Work vs Study vs Admin) (AC-PB5-01)
   const statsByCategory = useMemo(() => {
@@ -200,35 +203,31 @@ export default function GrowthDashboard({ tasks }: GrowthDashboardProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         
         {/* Module 1: Peak Productivity Hours (Epic 3 - PB-3) */}
-        <div id="peak-hours-widget" className="md:col-span-1 p-5 bg-white border border-gray-100 rounded-2xl shadow-xs space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
-              <Brain className="w-4 h-4" />
+        <div className="md:col-span-1 flex flex-col gap-5">
+          {chronotype ? (
+            <ChronobiologyCard chronotype={chronotype} onRetake={onTakeSurvey} />
+          ) : (
+            <div className="p-6 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-2xl shadow-sm relative overflow-hidden flex flex-col items-center justify-center text-center space-y-4">
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+              <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-400/20 rounded-full blur-2xl" />
+              <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <Brain className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Khám phá Nhịp sinh học</h3>
+                <p className="text-[11px] text-indigo-100 mt-1 px-2 leading-relaxed">
+                  Làm bài trắc nghiệm 30s để tìm ra "giờ vàng" tập trung và tối ưu lịch trình.
+                </p>
+              </div>
+              <button onClick={onTakeSurvey} className="px-5 py-2.5 bg-white text-indigo-700 font-bold text-xs rounded-xl shadow-md hover:bg-indigo-50 transition active:scale-95 cursor-pointer z-10">
+                Bắt đầu trắc nghiệm
+              </button>
             </div>
-            <h4 className="font-sans font-bold text-sm text-gray-800">Khung giờ Deep Work tối ưu</h4>
-          </div>
+          )}
 
-          <div className="space-y-2 p-4 bg-slate-50 border border-slate-100 rounded-xl relative overflow-hidden">
-            <span className="text-[9px] bg-indigo-600 text-white font-mono font-bold px-1.5 py-0.5 rounded absolute right-2 top-2 uppercase">
-              AI Suggestion
-            </span>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">MỐC HỆ THỐNG ĐỀ XUẤT</p>
-            <h3 className="font-mono text-xl font-bold text-indigo-600">
-              {peakHourRecommendation.suggestedHour}
-            </h3>
-            <p className="text-xs text-gray-700 leading-normal font-medium mt-1">
-              {peakHourRecommendation.reason}
-            </p>
-          </div>
-
-          <div className="text-[11px] text-gray-500 space-y-1.5 leading-relaxed bg-indigo-50/40 p-3 rounded-lg border border-indigo-100/50">
-            <p className="font-semibold text-indigo-900">🔬 Phân tích tiến trình:</p>
-            <p>{peakHourRecommendation.msg}</p>
-            <p className="italic text-[10px]">*Hệ thống tự động ghi nhận ngầm khi bạn đánh dấu hoàn thành nhiệm vụ.</p>
-          </div>
-
-          {/* 🔥 Proposed Deep Work Tasks (AC-PB3-04) */}
-          <div className="pt-4 border-t border-gray-100 space-y-3">
+          <div id="peak-hours-widget" className="p-5 bg-white border border-gray-100 rounded-2xl shadow-xs space-y-4">
+            {/* 🔥 Proposed Deep Work Tasks (AC-PB3-04) */}
+            <div className="space-y-3">
             <h5 className="font-sans font-bold text-xs text-slate-800 flex items-center gap-1.5">
               <span>🔥</span> Tác vụ Deep Work đề xuất
             </h5>
@@ -267,6 +266,7 @@ export default function GrowthDashboard({ tasks }: GrowthDashboardProps) {
                 </p>
               </div>
             )}
+            </div>
           </div>
         </div>
 

@@ -4,11 +4,12 @@
  */
 
 import React, { useMemo } from 'react';
-import { AlertCircle, ArrowRight, Calendar, Check, Clock, Plus, HelpCircle } from 'lucide-react';
-import { Task } from '../types';
+import { AlertCircle, ArrowRight, Calendar, Check, Clock, Plus, HelpCircle, Zap } from 'lucide-react';
+import { Task, Chronotype } from '../types';
 
 interface SchedulerProps {
   tasks: Task[];
+  chronotype?: Chronotype;
   onUpdateTaskTime: (taskId: string, newTime: string) => void;
   onOpenCreateTask: (defaultHour?: string) => void;
   onSelectTaskToEdit: (task: Task) => void;
@@ -29,7 +30,7 @@ export function minutesToTimeString(mins: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-export default function Scheduler({ tasks, onUpdateTaskTime, onOpenCreateTask, onSelectTaskToEdit }: SchedulerProps) {
+export default function Scheduler({ tasks, chronotype, onUpdateTaskTime, onOpenCreateTask, onSelectTaskToEdit }: SchedulerProps) {
   // Load and manage study ignore count from localStorage (AC-PB51-03 & AC-PB51-04)
   const [studyIgnoreCount, setStudyIgnoreCount] = React.useState<number>(() => {
     const countStr = localStorage.getItem('focusflow_study_ignore_count');
@@ -112,6 +113,48 @@ export default function Scheduler({ tasks, onUpdateTaskTime, onOpenCreateTask, o
     return null;
   }, [scheduledTasks, studyIgnoreCount]);
 
+  // Find chronobiology nudges (PB-F3)
+  const chronotypeNudges = useMemo(() => {
+    if (!chronotype) return [];
+    
+    let goldenStart = 9;
+    let goldenEnd = 17;
+    let fallbackTime = '09:00';
+    let msg = '';
+    
+    if (chronotype === 'EARLY_BIRD') {
+      goldenStart = 8; goldenEnd = 11;
+      fallbackTime = '09:00';
+      msg = 'Sơn Ca';
+    } else if (chronotype === 'NIGHT_OWL') {
+      goldenStart = 20; goldenEnd = 22;
+      fallbackTime = '20:00';
+      msg = 'Cú Đêm';
+    } else {
+      goldenStart = 9; goldenEnd = 11;
+      fallbackTime = '09:30';
+      msg = 'Chim Bồ Câu';
+    }
+
+    const nudges: Array<{ task: Task; suggestion: string; reason: string }> = [];
+    
+    for (const t of scheduledTasks) {
+      if (t.energy_level === 'HIGH' && (t.eisenhower_q === 'Q1' || t.eisenhower_q === 'Q2')) {
+        const startMins = timeStringToMinutes(t.scheduled_at!);
+        const h = Math.floor(startMins / 60);
+        // if the scheduled hour is completely outside the golden hours
+        if (h < goldenStart || h > goldenEnd) {
+          nudges.push({
+            task: t,
+            suggestion: fallbackTime,
+            reason: `Bạn đang xếp lịch Deep Work vào giờ thấp điểm sinh học. Nên dời sang khung giờ vàng của ${msg} (${goldenStart}h-${goldenEnd}h).`
+          });
+        }
+      }
+    }
+    return nudges;
+  }, [scheduledTasks, chronotype]);
+
   const handleApplyResolution = (taskId: string, targetTime: string) => {
     onUpdateTaskTime(taskId, targetTime);
   };
@@ -161,6 +204,45 @@ export default function Scheduler({ tasks, onUpdateTaskTime, onOpenCreateTask, o
                       className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-[11px] transition-colors flex items-center gap-1 cursor-pointer"
                     >
                       <Check className="w-3 h-3" /> Áp dụng
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 🦉 Chronobiology Nudges (PB-F3) */}
+      {chronotypeNudges.length > 0 && (
+        <div id="chronobiology-alerts-container" className="p-4 bg-amber-50 border border-amber-100 rounded-2xl space-y-3 transition-all duration-300">
+          <div className="flex items-center gap-2 text-amber-800">
+            <Zap className="w-5 h-5 shrink-0 text-amber-500 animate-pulse" />
+            <h4 className="font-sans font-bold text-sm">Gợi ý Nhịp Sinh Học ({chronotypeNudges.length})</h4>
+          </div>
+
+          <div className="divide-y divide-amber-100/60 space-y-2.5">
+            {chronotypeNudges.map((nudge, index) => (
+              <div key={index} className="pt-2 text-xs text-amber-900 font-medium">
+                <p className="leading-relaxed">
+                  Nhiệm vụ <strong>&quot;{nudge.task.title}&quot;</strong>: {nudge.reason}
+                </p>
+
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 p-3 bg-white/95 border border-amber-200/60 rounded-xl shadow-xs">
+                  <div className="flex items-center gap-1.5 text-gray-700">
+                    <Clock className="w-3.5 h-3.5 text-amber-500 font-bold" />
+                    <span>Chuyển sang giờ đề xuất:</span>
+                    <span className="font-mono bg-amber-100/50 px-1.5 py-0.5 rounded text-amber-700 font-bold">
+                      {nudge.suggestion}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleApplyResolution(nudge.task.id, nudge.suggestion)}
+                      className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg text-[11px] transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <Check className="w-3 h-3" /> Chuyển lịch
                     </button>
                   </div>
                 </div>
