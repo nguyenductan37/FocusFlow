@@ -8,6 +8,16 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 ## [1.6.0] — 2026-06-10
 
 ### Added
+- **Sắp xếp thông minh theo Cụm bối cảnh (Smart Category Batching):**
+  - *Phân tích nghiệp vụ:* Giải quyết vấn đề lãng phí năng lượng do chuyển đổi ngữ cảnh (Context Switching) bằng cách tự động dồn các task vụn vặt cùng nhóm vào một khung thời gian lý tưởng.
+  - *Tiêu chí AC:*
+    - SC1: Tự động phát hiện $\ge 3$ task cùng danh mục trong ngày chưa hoàn thành và hiển thị Banner "Gợi ý tối ưu lịch trình".
+    - SC2: Nút "Đồng ý gom lịch" để tự động dời lịch xếp các task nối tiếp nhau, và "Bỏ qua" để ẩn banner.
+    - SC3: Thuật toán quét và tìm thời gian trống thông minh, tránh tuyệt đối khung giờ vàng sinh học (Golden Hours) của người dùng.
+  - *Triển khai kỹ thuật:*
+    - Thêm `BatchingNudgeCard.tsx` hiển thị đề xuất gom nhóm.
+    - Phát triển thuật toán lõi `findOptimalStartTime` trong `schedulerUtils.ts`.
+    - Tích hợp logic xử lý trong `App.tsx` với state `dismissedBatches`.
 - **Sinh Vật Nhịp Sinh Học (Bio-Companion) & Cá Nhân Hóa Tên Ứng Dụng:**
   - *Phân tích nghiệp vụ:* Nhằm tăng tính tương tác, tạo động lực tâm lý tích cực để duy trì lối sống lành mạnh và tránh cảm giác nhàm chán khi thực hiện lịch trình làm việc. Đồng thời tối ưu hóa tính nhận diện thương hiệu của ứng dụng.
   - *Tiêu chí AC:*
@@ -21,6 +31,18 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
     - Xây dựng component `BioPetWidget.tsx` sử dụng SVG thuần vẽ tạo hình linh vật và xử lý hoạt họa (wobble, bounce, breath) qua CSS `@keyframes` để tối ưu hóa hiệu năng client-side.
     - Tích hợp logic tính điểm `updatePetXp` vào các hàm xử lý sự kiện trung tâm trong `App.tsx` và đồng bộ trạng thái thăng cấp qua `localStorage` (key `focusflow_pet_state`).
     - Cập nhật thẻ `<title>` trong `index.html` thành "FocusFlow".
+- **Hệ Thống Dự Báo Mức Độ Quá Tải Nhận Thức (Cognitive Overload Predictor):**
+  - *Phân tích nghiệp vụ:* Tránh việc người dùng kiệt sức nhận thức (cognitive burnout) mà không tự nhận biết bằng cách tự động đo lường, dự báo mức độ căng thẳng của não bộ theo thời gian thực và đưa ra cảnh báo tĩnh kịp thời.
+  - *Tiêu chí AC:*
+    - SC1: Tích hợp thêm một thanh tiến trình đo "Tải nhận thức (CLI)" vào widget EnergyBar hiện tại.
+    - SC2: Tự động thay đổi màu thanh CLI theo các ngưỡng: Xanh lá (<50%), Cam (50% - 79%), Đỏ rực nhấp nháy (>=80%).
+    - SC3: Hiển thị hộp cảnh báo màu đỏ với nội dung khuyên người dùng nghỉ ngơi khi CLI chạm ngưỡng >=80%.
+    - SC4: CLI tích lũy dựa trên các hoạt động: +0.8%/phút Pomodoro, +10% khi hoàn thành task HIGH energy, +5% khi dời lịch/hoãn task.
+    - SC5: CLI phục hồi giảm -20% khi nhấn nghỉ ngơi (Take Break) và reset về 0% khi thực hiện EOD.
+  - *Triển khai kỹ thuật:*
+    - Lưu trữ và cập nhật trạng thái `cognitiveLoad` trong `App.tsx` đồng bộ qua `localStorage` (key `focusflow_cognitive_load`).
+    - Nâng cấp `EnergyBar.tsx` nhận prop `cognitiveLoad` để hiển thị thêm thanh CLI và xử lý logic đổi màu sắc + cảnh báo.
+    - Đặt hooks gọi `updateCognitiveLoad` trong các hàm xử lý sự kiện trung tâm: `handleToggleTaskComplete`, `handleTakeBreak`, `handleConfirmClosure`, `handleFocusComplete`, `handleFocusDefer`.
 
 ## [1.5.0] — 2026-06-10
 

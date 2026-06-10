@@ -36,6 +36,8 @@ import FocusOverlay from './components/FocusOverlay';
 import { playFocusAlertSound } from './utils/focusUtils';
 import ChronotypeSurveyModal from './components/ChronotypeSurveyModal';
 import BioPetWidget from './components/BioPetWidget';
+import BatchingNudgeCard from './components/BatchingNudgeCard';
+import { findOptimalStartTime } from './utils/schedulerUtils';
 
 export default function App() {
   // ---- 1. CORE APPLICATION STATE ----
@@ -53,6 +55,23 @@ export default function App() {
     const saved = localStorage.getItem('focusflow_pet_state');
     return saved ? JSON.parse(saved) : { level: 1, xp: 0, name: 'Linh Vật' };
   });
+
+  // Cognitive Load State
+  const [cognitiveLoad, setCognitiveLoad] = useState<number>(() => {
+    const saved = localStorage.getItem('focusflow_cognitive_load');
+    return saved ? Number(saved) : 0;
+  });
+
+  const updateCognitiveLoad = (delta: number) => {
+    setCognitiveLoad(current => {
+      const next = Math.max(0, Math.min(100, current + delta));
+      localStorage.setItem('focusflow_cognitive_load', String(next));
+      return next;
+    });
+  };
+
+  // Batching State
+  const [dismissedBatches, setDismissedBatches] = useState<string[]>([]);
 
   // Real-time local clock (for precise EOD boundary & tracking)
   const [currentTime, setCurrentTime] = useState<string>(() => {
@@ -268,9 +287,12 @@ export default function App() {
 
     saveTasksToStorage(updated);
     
-    // Bio-Pet logic
+    // Bio-Pet & CLI logic
     if (isNowDone) {
       updatePetXp(20, match.energy_level === 'HIGH');
+      if (match.energy_level === 'HIGH') {
+        updateCognitiveLoad(10);
+      }
     }
   };
 
@@ -289,6 +311,7 @@ export default function App() {
     setEnergyScore(100);
     localStorage.setItem('focusflow_energy', '100');
     updatePetXp(5);
+    updateCognitiveLoad(-20);
   };
 
   // Exit OFF Mode (AC-PB2-05)
@@ -324,6 +347,7 @@ export default function App() {
 
     saveTasksToStorage(updated);
     updatePetXp(25);
+    updateCognitiveLoad(-100);
     alert('Đã đóng ngày hoàn thiện! Trạng thái OFF đã được kích hoạt. Hãy tận hưởng kỳ nghỉ ngắn ngắt kết nối tâm lý tốt nhất! 🌸');
   };
 
@@ -380,6 +404,7 @@ export default function App() {
     setFocusTask(null);
     setEnergyScore((curr) => Math.max(0, curr - 15)); // Drain energy after deep work
     updatePetXp(15, focusTask.energy_level === 'HIGH');
+    updateCognitiveLoad(actualMin * 0.8);
   };
 
   const handleFocusDefer = (reason: string) => {
@@ -397,6 +422,7 @@ export default function App() {
     });
     saveTasksToStorage(updated);
     setFocusTask(null);
+    updateCognitiveLoad(5);
   };
 
   const handleOpenCreateWithPresets = (duration?: number, hour?: string) => {
@@ -448,6 +474,62 @@ export default function App() {
 
   const statsDoneCount = useMemo(() => tasks.filter((t) => t.status === 'DONE').length, [tasks]);
   const statsPendingCount = useMemo(() => tasks.filter((t) => t.status !== 'DONE').length, [tasks]);
+
+  // PB-F5: Smart Category Batching Detection
+  const batchingSuggestion = useMemo(() => {
+    if (activeTasksToday.length < 3) return null;
+
+    const categoryGroups: Record<string, Task[]> = {};
+    activeTasksToday.forEach(t => {
+      if (!categoryGroups[t.category]) categoryGroups[t.category] = [];
+      categoryGroups[t.category].push(t);
+    });
+
+    for (const [cat, catTasks] of Object.entries(categoryGroups)) {
+      if (catTasks.length >= 3 && !dismissedBatches.includes(cat)) {
+        const totalDuration = catTasks.reduce((sum, t) => sum + (t.estimated_min || 25), 0);
+        const proposedTime = findOptimalStartTime(tasks, totalDuration, chronotype, currentTime);
+        
+        if (proposedTime) {
+          return {
+            category: cat as TaskCategory,
+            taskCount: catTasks.length,
+            proposedTime,
+            tasksToBatch: catTasks
+          };
+        }
+      }
+    }
+    return null;
+  }, [activeTasksToday, dismissedBatches, tasks, chronotype, currentTime]);
+
+  const handleApplyBatch = () => {
+    if (!batchingSuggestion) return;
+    
+    let currentMins = 0;
+    const [pH, pM] = batchingSuggestion.proposedTime.split(':').map(Number);
+    currentMins = pH * 60 + pM;
+
+    const taskUpdates = new Map<string, string>();
+
+    batchingSuggestion.tasksToBatch.forEach(t => {
+      const h = Math.floor(currentMins / 60);
+      const m = Math.round(currentMins % 60);
+      const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      taskUpdates.set(t.id, timeStr);
+      currentMins += (t.estimated_min || 25);
+    });
+
+    const updated = tasks.map(t => {
+      if (taskUpdates.has(t.id)) {
+        return { ...t, scheduled_at: taskUpdates.get(t.id) };
+      }
+      return t;
+    });
+
+    saveTasksToStorage(updated);
+    setDismissedBatches(prev => [...prev, batchingSuggestion.category]);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-gray-800 transition-colors duration-300">
@@ -630,8 +712,20 @@ export default function App() {
               {/* Energy bar tracker widget */}
               <EnergyBar
                 currentScore={energyScore}
+                cognitiveLoad={cognitiveLoad}
                 onTakeBreak={handleTakeBreak}
               />
+
+              {/* Smart Category Batching Nudge */}
+              {batchingSuggestion && (
+                <BatchingNudgeCard
+                  category={batchingSuggestion.category}
+                  taskCount={batchingSuggestion.taskCount}
+                  proposedTime={batchingSuggestion.proposedTime}
+                  onAccept={handleApplyBatch}
+                  onDismiss={() => setDismissedBatches(prev => [...prev, batchingSuggestion.category])}
+                />
+              )}
 
               {/* Day scheduled chronological view */}
               <Scheduler
