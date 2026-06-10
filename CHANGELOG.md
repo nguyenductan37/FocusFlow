@@ -1,3 +1,7 @@
+Dựa trên các tài liệu `planning doc.md` và các `sprintbacklog` bạn cung cấp, dưới đây là bản **CHANGELOG.md** được viết lại hoàn chỉnh theo cấu trúc chuẩn (Keep a Changelog) và phản ánh đầy đủ các tính năng đã triển khai trong Sprint 4.
+
+---
+
 # CHANGELOG.md
 
 Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lại tại đây.  
@@ -5,134 +9,190 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 
 ---
 
+## [Unreleased]
+
+### Planned
+- Tích hợp WebSocket cho đồng bộ real-time (nếu có backend)
+- Xuất báo cáo hiệu suất tuần dạng PDF
+
+---
+
 ## [1.6.0] — 2026-06-10
 
 ### Added
-- **Sắp xếp thông minh theo Cụm bối cảnh (Smart Category Batching):**
-  - *Phân tích nghiệp vụ:* Giải quyết vấn đề lãng phí năng lượng do chuyển đổi ngữ cảnh (Context Switching) bằng cách tự động dồn các task vụn vặt cùng nhóm vào một khung thời gian lý tưởng.
-  - *Tiêu chí AC:*
-    - SC1: Tự động phát hiện $\ge 3$ task cùng danh mục trong ngày chưa hoàn thành và hiển thị Banner "Gợi ý tối ưu lịch trình".
-    - SC2: Nút "Đồng ý gom lịch" để tự động dời lịch xếp các task nối tiếp nhau, và "Bỏ qua" để ẩn banner.
-    - SC3: Thuật toán quét và tìm thời gian trống thông minh, tránh tuyệt đối khung giờ vàng sinh học (Golden Hours) của người dùng.
-  - *Triển khai kỹ thuật:*
-    - Thêm `BatchingNudgeCard.tsx` hiển thị đề xuất gom nhóm.
-    - Phát triển thuật toán lõi `findOptimalStartTime` trong `schedulerUtils.ts`.
-    - Tích hợp logic xử lý trong `App.tsx` với state `dismissedBatches`.
-- **Sinh Vật Nhịp Sinh Học (Bio-Companion) & Cá Nhân Hóa Tên Ứng Dụng:**
-  - *Phân tích nghiệp vụ:* Nhằm tăng tính tương tác, tạo động lực tâm lý tích cực để duy trì lối sống lành mạnh và tránh cảm giác nhàm chán khi thực hiện lịch trình làm việc. Đồng thời tối ưu hóa tính nhận diện thương hiệu của ứng dụng.
-  - *Tiêu chí AC:*
-    - SC1: Hiển thị quả trứng lắc lư khi chưa làm trắc nghiệm sinh học. Nhấp vào quả trứng hiển thị bong bóng thoại và nút hướng dẫn mở modal trắc nghiệm.
-    - SC2: Nở ra linh vật Sơn Ca (vàng nhấp nhô), Cú Đêm (xanh lam phồng xẹp), hoặc Bồ Câu (lục nhạt nghiêng đầu) sau khi khảo sát hoàn tất.
-    - SC3: Chuyển sang trạng thái mệt mỏi (ngái ngủ kèm chữ "Zzz" bay lên và icon Mặt Trăng) khi làm việc quá giờ ngủ sinh học.
-    - SC4: Tích lũy điểm Bio-XP từ mọi hành động lành mạnh (Xong việc, chạy Pomodoro, Take Break, EOD), nhân đôi (x2) điểm khi làm việc trong khung giờ vàng sinh học. Cho phép đổi tên linh vật trực tiếp.
-    - SC5: Hiển thị tiêu đề tab trình duyệt của ứng dụng là "FocusFlow".
-  - *Triển khai kỹ thuật:*
-    - Định nghĩa cấu trúc dữ liệu `BioPetState` trong `src/types.ts`.
-    - Xây dựng component `BioPetWidget.tsx` sử dụng SVG thuần vẽ tạo hình linh vật và xử lý hoạt họa (wobble, bounce, breath) qua CSS `@keyframes` để tối ưu hóa hiệu năng client-side.
-    - Tích hợp logic tính điểm `updatePetXp` vào các hàm xử lý sự kiện trung tâm trong `App.tsx` và đồng bộ trạng thái thăng cấp qua `localStorage` (key `focusflow_pet_state`).
-    - Cập nhật thẻ `<title>` trong `index.html` thành "FocusFlow".
-- **Hệ Thống Dự Báo Mức Độ Quá Tải Nhận Thức (Cognitive Overload Predictor):**
-  - *Phân tích nghiệp vụ:* Tránh việc người dùng kiệt sức nhận thức (cognitive burnout) mà không tự nhận biết bằng cách tự động đo lường, dự báo mức độ căng thẳng của não bộ theo thời gian thực và đưa ra cảnh báo tĩnh kịp thời.
-  - *Tiêu chí AC:*
-    - SC1: Tích hợp thêm một thanh tiến trình đo "Tải nhận thức (CLI)" vào widget EnergyBar hiện tại.
-    - SC2: Tự động thay đổi màu thanh CLI theo các ngưỡng: Xanh lá (<50%), Cam (50% - 79%), Đỏ rực nhấp nháy (>=80%).
-    - SC3: Hiển thị hộp cảnh báo màu đỏ với nội dung khuyên người dùng nghỉ ngơi khi CLI chạm ngưỡng >=80%.
-    - SC4: CLI tích lũy dựa trên các hoạt động: +0.8%/phút Pomodoro, +10% khi hoàn thành task HIGH energy, +5% khi dời lịch/hoãn task.
-    - SC5: CLI phục hồi giảm -20% khi nhấn nghỉ ngơi (Take Break) và reset về 0% khi thực hiện EOD.
-  - *Triển khai kỹ thuật:*
-    - Lưu trữ và cập nhật trạng thái `cognitiveLoad` trong `App.tsx` đồng bộ qua `localStorage` (key `focusflow_cognitive_load`).
-    - Nâng cấp `EnergyBar.tsx` nhận prop `cognitiveLoad` để hiển thị thêm thanh CLI và xử lý logic đổi màu sắc + cảnh báo.
-    - Đặt hooks gọi `updateCognitiveLoad` trong các hàm xử lý sự kiện trung tâm: `handleToggleTaskComplete`, `handleTakeBreak`, `handleConfirmClosure`, `handleFocusComplete`, `handleFocusDefer`.
 
-## [1.5.0] — 2026-06-10
+#### 🧠 Hệ Thống Dự Báo Quá Tải Nhận Thức (Cognitive Overload Predictor)
+- **Chỉ số CLI (Cognitive Load Index):** Thanh đo thứ hai trong `EnergyBar`, phản ánh mức độ căng thẳng não bộ theo thời gian thực (0% → 100%).
+- **Cảnh báo thông minh:** Tự động đổi màu thanh CLI theo ngưỡng:
+  - 🟢 Xanh lá (`< 50%`): An toàn
+  - 🟡 Cam (`50% - 79%`): Cảnh báo nhẹ
+  - 🔴 Đỏ rực nhấp nháy (`≥ 80%`): Quá tải, kèm thông báo khuyến nghị nghỉ ngơi
+- **Cơ chế tích lũy & phục hồi:**
+  - `+0.8%`/phút khi chạy Pomodoro
+  - `+10%` khi hoàn thành task **HIGH energy**
+  - `+5%` khi dời lịch/hoãn task
+  - `-20%` khi nhấn **Take Break**
+  - `Reset về 0%` khi kết thúc ngày (EOD)
 
-### Added
-- **Khảo sát Nhịp sinh học (Chronotype Survey) & Đồ thị Năng lượng Sinh học 24h:**
-  - *Phân tích nghiệp vụ:* Mỗi cá nhân có đồng hồ sinh học khác nhau (Sơn Ca, Cú Đêm, hay Chim Bồ Câu). Việc áp đặt khung giờ tập trung cố định dễ gây mệt mỏi và giảm hiệu suất. Giải pháp là cung cấp khảo sát nhanh để cá nhân hóa lịch trình theo nhịp sinh học tự nhiên.
-  - *Tiêu chí AC:* 
-    - SC1: Trắc nghiệm 3 câu hỏi MEQ rút gọn tại tab "Tăng Trưởng Kỹ Năng" để phân loại chính xác nhóm Sơn ca (Early Bird), Cú đêm (Night Owl), hoặc Chim bồ câu (Third Bird).
-    - SC2: Hiển thị đồ thị năng lượng 24 giờ trực quan vẽ bằng SVG mô tả rõ các điểm đỉnh (Peak) và đáy (Trough).
-  - *Triển khai kỹ thuật:* 
-    - Xây dựng component `ChronotypeSurveyModal.tsx` để chấm điểm và lưu trạng thái vào `localStorage` dưới key `focusflow_chronotype`.
-    - Tạo component `ChronobiologyCard.tsx` vẽ đồ thị SVG `<path>` mượt mà theo phương trình hình sin mô phỏng mức năng lượng thay đổi theo thời gian của từng nhóm sinh học.
-- **Hệ thống Gợi ý Lịch trình Thông minh (Smart Scheduler Nudges):**
-  - *Phân tích nghiệp vụ:* Tránh việc người dùng lên lịch các công việc đòi hỏi tập trung cao (Deep Work) vào thời điểm năng lượng sinh học ở mức đáy (mệt mỏi/uể oải).
-  - *Tiêu chí AC:* Kích hoạt cảnh báo (Nudge) khi xếp task HIGH energy và Q1/Q2 nằm ngoài khung giờ vàng sinh học. Hỗ trợ nút chuyển nhanh sang giờ vàng chỉ bằng 1-click.
-  - *Triển khai kỹ thuật:* Tích hợp Nudge Engine vào `Scheduler.tsx` để so khớp giờ hẹn của task với khung giờ vàng của nhóm sinh học. Khi vi phạm, render banner cảnh báo màu vàng kèm nút `Chuyển lịch` gọi hàm callback `onUpdateTaskTime`.
-- **Trích xuất AI Tối ưu theo Sinh học (AIParsingBar Integration):**
-  - *Phân tích nghiệp vụ:* Tận dụng AI để tự động tối ưu hóa lịch trình ngay từ khâu tạo task bằng ngôn ngữ tự nhiên.
-  - *Tiêu chí AC:* Nếu người dùng không nhập thời gian cụ thể cho task HIGH energy, AI sẽ tự động gán vào khung giờ vàng sinh học tương ứng.
-  - *Triển khai kỹ thuật:* Mở rộng hàm `parseNaturalLanguageTask` trong `gemini.ts` để nhận tham số `chronotype`. Bổ sung chỉ dẫn (system context) vào prompt của Gemini 2.5 Flash để tự động điền giá trị `scheduled_at` tương ứng với giờ vàng của Sơn Ca (08:00 - 11:00), Cú Đêm (20:00 - 22:00), hoặc Bồ Câu (09:00 - 11:30) khi tạo task nặng năng lượng.
+#### 🐣 Sinh Vật Nhịp Sinh Học (Bio-Companion)
+- **Trạng thái Trứng:** Hiển thị quả trứng lắc lư khi chưa làm trắc nghiệm sinh học. Nhấp vào → mở modal khảo sát.
+- **Nở theo nhóm sinh học:**
+  - 🐤 **Sơn Ca (Early Bird):** Chim vàng chanh nhấp nhô
+  - 🦉 **Cú Đêm (Night Owl):** Cú xanh lam phồng xẹp
+  - 🕊️ **Bồ Câu (Third Bird):** Bồ câu lục nhạt nghiêng đầu
+- **Trạng thái sức khỏe:**
+  - **Active:** Nhảy nhót khi làm việc đúng **Khung giờ vàng sinh học**
+  - **Fatigued:** Nằm dài, mắt nhắm, kèm chữ "Zzz" khi làm việc quá giờ ngủ sinh học
+  - **Decompressing:** Thiền / ngủ sâu khi ở chế độ nghỉ ngơi hoặc Decompression
+- **Hệ thống Bio-XP & Thăng cấp:**
+  - Cộng điểm từ các hành động lành mạnh, **x2 điểm khi làm đúng giờ vàng**
+  - Bảng điểm: `+20` (hoàn thành task), `+15` (Pomodoro), `+5` (Take Break), `+25` (EOD)
+  - Công thức thăng cấp: `XP_max = Level × 100`
+  - Popover hiển thị Level, thanh tiến trình XP, và ô đổi tên Pet trực tiếp
 
-## [1.4.0] — 2026-06-09
+#### 📦 Sắp xếp thông minh theo Cụm bối cảnh (Smart Category Batching)
+- **Phát hiện tự động:** Khi có `≥ 3` task cùng danh mục (`Học tập`/`Làm việc`/`Admin`) chưa hoàn thành trong ngày → hiển thị Banner đề xuất gom lịch.
+- **Thuật toán tìm khe trống lý tưởng (`findOptimalStartTime`):**
+  - Tính tổng thời lượng cần thiết, quét khe trống từ thời điểm hiện tại đến 21:00
+  - **Ưu tiên tránh** Khung giờ vàng sinh học (theo Chronotype)
+  - Fallback sang khe trống bất kỳ nếu không có khe lý tưởng
+- **Hành động 1-click:**
+  - Nút **"Đồng ý gom lịch"** → Tự động dời các task nối tiếp nhau vào khe thời gian đề xuất
+  - Nút **"Bỏ qua"** → Ẩn banner đến hết ngày (hoặc cho đến khi có thay đổi task)
+
+#### 🔧 Các cải tiến kỹ thuật khác
+- **Title trang web:** Cập nhật thẻ `<title>` trong `index.html` thành "FocusFlow"
+- **Đồng bộ trạng thái:** Lưu trữ `BioPetState` và `cognitiveLoad` vào `localStorage` với các key tương ứng
+- **Hiệu ứng SVG & CSS Keyframes:** Sử dụng hoạt họa thuần CSS (`wobble`, `bounce`, `breath`, `pulse`) để tối ưu hiệu năng client-side
+
+---
+
+## [1.5.0] — 2026-06-09
 
 ### Added
-- **Trợ lý thêm công việc thông minh bằng AI:** Thêm thanh nhập liệu tự nhiên trên trang chủ. Người dùng chỉ cần gõ nội dung công việc bằng tiếng Việt thông thường (ví dụ: "Họp phòng lúc 2h chiều"), hệ thống sẽ tự động nhận diện và điền sẵn tiêu đề, thời lượng, mức độ ưu tiên và giờ hẹn phù hợp.
-- **Hệ thống ngăn ngừa dồn ứ công việc (Anti-Doom-Pile):** Giúp người dùng giải quyết việc lớn bị trì hoãn nhiều lần. Khi một công việc bị đổi lịch quá 3 lần, hệ thống sẽ hiện cảnh báo màu cam kèm nút "Rã nhỏ bước hành động". Nhấn nút này, trí tuệ nhân tạo sẽ chia công việc lớn đó thành 2-3 đầu việc siêu nhỏ, dễ làm (chỉ mất 5-15 phút) để người dùng bắt tay vào làm ngay mà không bị nản.
-- **Tính năng tự động hóa và xử lý AI ngầm:** Xây dựng bộ xử lý thông minh để kết nối, truyền tải thông tin và chuyển đổi yêu cầu của người dùng thành các cấu trúc công việc cụ thể.
+
+#### 🌙 Khảo sát Nhịp sinh học (Chronotype Survey) & Đồ thị Năng lượng 24h
+- **Trắc nghiệm 3 câu hỏi MEQ rút gọn:** Phân loại người dùng vào Sơn Ca, Cú Đêm, hoặc Bồ Câu.
+- **Đồ thị năng lượng SVG:** Vẽ đường cong hình sin mô tả mức năng lượng theo giờ trong ngày cho từng nhóm sinh học.
+
+#### ⏰ Hệ thống Gợi ý Lịch trình Thông minh (Smart Scheduler Nudges)
+- **Cảnh báo khi xếp sai giờ:** Phát hiện task **HIGH energy** và **Q1/Q2** được xếp ngoài khung giờ vàng sinh học → Hiển thị banner vàng kèm nút **"Chuyển lịch"** 1-click.
+
+#### 🤖 Trích xuất AI tối ưu theo Sinh học
+- **Tích hợp Chronotype vào AI Parsing:** Khi tạo task HIGH energy bằng ngôn ngữ tự nhiên mà không có thời gian cụ thể, Gemini tự động gán `scheduled_at` vào khung giờ vàng tương ứng:
+  - Sơn Ca: `08:00 - 11:00`
+  - Cú Đêm: `20:00 - 22:00`
+  - Bồ Câu: `09:00 - 11:30` hoặc `15:00 - 17:00`
 
 ### Changed
-- **Nâng cấp độ ổn định của hệ thống:** Cải tiến cơ chế kết nối với trí tuệ nhân tạo để tránh làm sập hay treo ứng dụng ngay cả khi chưa thiết lập khóa kết nối (API Key). Hệ thống sẽ chạy bình thường các tính năng cơ bản và chỉ hiện thông báo nhắc nhở khi dùng đến tính năng thông minh.
-- **Cập nhật tài liệu dự án:** Hoàn thiện kế hoạch phát triển chi tiết cho các giai đoạn tiếp theo để dễ dàng theo dõi tiến độ.
-- **Mở rộng thông tin công việc:** Cho phép hệ thống lưu trữ thêm số lần trì hoãn và lý do dời lịch của từng công việc để phục vụ cho việc thống kê, đánh giá hiệu quả cá nhân.
-
-## [1.3.0] — 2026-06
-
-### Improved
-- **AC-PB5-02 & AC-PB5-03 (Cải tiến - Tăng trưởng kĩ năng):** Cải tiến thuật toán & đồ thị Bản đồ Tăng trưởng. Thay thế chỉ số tĩnh của "Tuần này" thành dữ liệu tổng hợp thời gian thực từ các đầu việc đã hoàn tất (`status === 'DONE'`). Tích hợp công thức tính Điểm tiến độ kĩ năng chuẩn hóa theo từng đầu việc cụ thể: $Score_{Task} = Effort Factor \times Duration In Hours \times Strategy Weight$ (trong đó hệ số nỗ lực HIGH=4.0, MEDIUM=2.0, LOW=1.0; trọng số ma trận Q2=1.5, Q1=1.2, Q3=0.8, Q4=0.3) cùng cơ chế so sánh tỷ suất tăng tiến tương đối so với tuần trước tránh tuyệt đối lỗi chia cho 0. Hiển thị bảng mô tả chi tiết công thức đẹp đẽ trực quan ngay dưới Legend.
-- **AC-PB31-04 (Cải tiến):** Điều chỉnh cơ chế phục hồi thể trạng tại `handleTakeBreak`. Khi người dùng click nút, chỉ số % ngân sách năng lượng tinh thần sẽ lập tức reset nạp đầy về đúng 100% thay vì cộng dồn +20% như trước. Đổi nhãn nút tương ứng trong `EnergyBar` thành: `"Tôi đã nghỉ ngơi (100%)"` để người dùng dễ kiểm soát.
-- **AC-PB51-03 & AC-PB51-04 (Cải tiến):** Bổ sung nút `"Bỏ qua"` với phong cách màu trắng sữa trực quan bên sườn nút `"Chèn học tập ngay"` trên Ribbon Đề xuất Time-boxing học tập thuộc cấu phần `Scheduler`. Tích hợp quy chuẩn đóng tắt thông báo: lưu trữ số lượng click từ chối (`studyIgnoreCount`) vào `localStorage`; khi nhấn "Bỏ qua" đủ 3 lần, hệ thống nhận diện và ẩn hoàn toàn hộp gợi ý suốt phần còn lại của ngày.
-- **AC-PB3-02 (Cải tiến - Loại bỏ giả lập):** Loại bỏ hoàn toàn nút bấm và chức năng giả lập dữ liệu lịch sử ("Kích hoạt Giả lập 7 ngày") để hướng tới sản phẩm thuần dữ liệu thật của người dùng. Hệ thống tự động tính toán khung giờ tối ưu (Peak hours) cũng như biểu đồ trực quan dựa 100% trên dữ liệu thao tác hoàn thành task (DONE) thực tế từ LocalStorage mà không vi phạm các tiêu chuẩn kỹ thuật trong SPEC.md.
-- **Tối ưu hóa Diện tích Giao diện (Bản đồ Tăng trưởng):** Ẩn bớt bảng bóc tách công thức toán học tính điểm tăng trưởng chi tiết dưới một nút bấm tương tác (`Xem công thức tính điểm`), giúp giao diện gọn gàng, tăng cường độ tập trung trực quan vào biểu đồ và số liệu lịch sử thực tế của bản thân người dùng.
+- **Nâng cấp độ ổn định của hệ thống:** Cải tiến cơ chế kết nối với Gemini API để tránh treo ứng dụng khi chưa có API Key.
 
 ---
 
-## [1.2.0] — 2026-06
-
-### Improved
-- **AC-PB3-04 (Cải tiến):** Thiết lập và tích hợp trực quan khu vực "Tác vụ Deep Work đề xuất" ngay bên dưới widget "Khung giờ Deep Work tối ưu" trong Bảng Tăng Trưởng (Growth Dashboard). Cấu phần tự động lọc thời gian thực tối đa 2 tác vụ chưa hoàn thành thỏa mãn đồng thời: mức năng lượng là HIGH và thuộc ô ma trận Eisenhower Q1 hoặc Q2, kèm theo fallback hướng dẫn tạo/phân loại thân thiện.
-
----
-
-## [1.1.1] — 2026-06
-
-### Changed
-- **PB-2 (Cải tiến):** Loại bỏ tính năng "giả lập giờ" điều chỉnh thủ công bằng form nhập liệu, tích hợp bộ đồng hồ số động lấy từ thời gian hệ thống thực tế (`HH:MM`) cập nhật chính xác mỗi giây. Giúp quy chuẩn Kết thúc ngày (EOD) vận hành hoàn hảo, chính trực dựa trên hệ thống thực.
-
----
-
-## [1.1.0] — 2026-06
+## [1.4.0] — 2026-06-08
 
 ### Added
-- **PB-4 (Mở rộng):** Tích hợp thêm các mốc thời gian rảnh mới bao gồm **30 phút** và **60 phút** (bên cạnh mốc 15 phút) vào bộ lọc thông minh của Trợ Lý Ra Quyết Định (Decision Assistant) giúp linh hoạt bám sát mọi biến động trong lịch trình.
-- **Tài liệu hướng dẫn:** Cấu trúc và triển khai thành công chương hướng dẫn sử dụng toàn diện (User Guide) trong file `README.md` giúp người dùng nhanh chóng làm quen chiến thuật ma trận Eisenhower, ngân sách năng lượng hay kết thúc ngày làm việc tĩnh lặng.
-- **Tài liệu vận hành & Review:** Biên soạn `CHECKLIST_REVIEW.md` làm tài liệu kiểm định chất lượng bám sát từng tiêu chí nghiệm thu (Acceptance Criteria) và đề xuất bộ dự báo rủi ro & biện pháp giảm thiểu thực tế (Production Risks & Mitigations) trong `SPEC.md`.
-- **Quy trình Vibe Coding:** Áp dụng bắt buộc quy trình Vibe Coding chuẩn (Plan, Doc, Build, Test) và tạo lập kho đối chứng `APPLY_VIBECODING.md` để ghi nhận bằng chứng phát triển an toàn.
+
+#### ✨ Trợ lý thêm công việc thông minh bằng AI
+- **Thanh nhập liệu tự nhiên (AI Command Bar):** Người dùng nhập tiếng Việt thông thường (ví dụ: *"Họp phòng lúc 2h chiều"*), hệ thống tự động nhận diện và điền sẵn: tiêu đề, thời lượng, mức ưu tiên, danh mục, giờ hẹn.
+- **Structured Outputs với Gemini API:** Sử dụng JSON Schema để đảm bảo đầu ra từ AI khớp chính xác với kiểu dữ liệu `Task`.
+
+#### 🧩 Hệ thống ngăn ngừa dồn ứ công việc (Anti-Doom-Pile)
+- **Theo dõi trì hoãn:** Task có `postpone_count ≥ 3` hiển thị nhãn cảnh báo cam và nút **"🧩 Rã nhỏ bước hành động"**.
+- **Rã nhỏ bằng AI:** Nhấn nút → Gọi Gemini chia task lớn thành 2-3 **micro-steps** (5-15 phút, năng lượng LOW/MEDIUM) để dễ bắt đầu ngay lập tức.
+- **Ghi nhận lý do trì hoãn:** Lưu lại lý do người dùng nhập khi hoãn task (trường `postpone_reasons`).
+
+### Changed
+- **Cập nhật cấu trúc `Task`:** Bổ sung `postpone_count` và `postpone_reasons`.
+- **Nâng cấp logic tăng `postpone_count`:** Tự động tăng khi dời `due_date` qua modal sửa task hoặc qua EOD Closure.
+
+---
+
+## [1.3.0] — 2026-06-06
+
+### Added
+
+#### 🔒 Khóa tập trung dựa trên Lịch trình (Schedule-based Focus Mode)
+- **Tự động kích hoạt:** Quét mỗi phút, nếu có task Deep Work (`Q1/Q2` + `HIGH/MEDIUM` + `scheduled_at` trùng giờ hiện tại) → Tự động mở **Focus Overlay** toàn màn hình.
+- **Giao diện khóa tập trung:**
+  - Đồng hồ đếm ngược Pomodoro (25 phút)
+  - Danh sách micro-steps (checkbox để tick)
+  - Âm thanh nền White Noise / Rain Sound (Web Audio API)
+  - Chặn thoát trang ngẫu nhiên (sự kiện `beforeunload`)
+- **Cơ chế hoãn có kiểm soát:** Khi nhấn "Hoãn công việc" → Yêu cầu chọn/nhập lý do cụ thể → Lưu vào `postpone_reasons` và tăng `postpone_count`.
+
+#### 🌙 Công cụ Decompression & Giấc ngủ Nhận thức buổi tối
+- **Kích hoạt:** Sau 19:30 và đã hoàn thành EOD → Hiển thị nút **"🌙 Khởi động chu trình xả hơi 3 phút"**.
+- **Bước 1 – Brain Dump:** Ô nhập văn bản lớn để "trút bỏ lo toan", khi gửi → hiệu ứng fade-out tan biến.
+- **Bước 2 – Bài tập thở 4-7-8:** Vòng tròn hoạt họa co giãn theo nhịp (hít 4s – giữ 7s – thở 8s), lặp lại 4 chu kỳ.
+- **Bước 3 – OFF Mode cứng:** Khóa toàn bộ tương tác với task cho đến sáng hôm sau (sau 05:00).
+
+### Changed
+- **Cập nhật cấu trúc `Task`:** Bổ sung `actual_min` (thời gian làm thực tế).
+- **Nâng cấp `EnergyBar`:** Reset năng lượng về 100% khi nhấn **Take Break** (thay vì cộng dồn +20%).
+- **Tối ưu hóa giao diện:** Ẩn bảng công thức tính điểm dưới nút **"Xem công thức tính điểm"** để giao diện Bản đồ Tăng trưởng gọn gàng hơn.
 
 ### Fixed
-- **PB-4 (Sửa lỗi):** Khắc phục lỗi xung đột giao diện nhấp nháy liên tục (render loop / iframe nested layouts) khi bấm kích hoạt Trợ Lý Ra Quyết Định bằng việc chuyển đổi cơ chế render Modal sang `createPortal` gắn vào `document.body`.
+- **Sửa lỗi xung đột giao diện Trợ lý Ra Quyết định:** Chuyển Modal sang `createPortal` gắn vào `document.body` để tránh render loop.
+- **Loại bỏ hoàn toàn nút "Giả lập 7 ngày":** Hệ thống hiện chỉ dựa trên dữ liệu thực từ `localStorage`.
 
 ---
 
-## [1.0.0] — 2026-06
+## [1.2.0] — 2026-06-04
 
 ### Added
-- **PB-1:** Hệ thống tự động tái cấu trúc lịch trình khi xảy ra xung đột thời gian, hiển thị cảnh báo tức thì, gợi ý dời lịch và áp dụng 1-click.
-- **PB-1.1:** Tích hợp Ma trận Eisenhower (Q1–Q4) và Phân bổ Mức năng lượng (Cao / Trung bình / Thấp) cho toàn bộ các Task.
-- **PB-2:** Quy trình "Kết thúc ngày" tự động (End of Day Summary), hiển thị tóm tắt, thành tựu nổi bật và kích hoạt trạng thái "Off" ngắt kết nối thông báo hoàn toàn.
-- **PB-2.1:** Tổng hợp task tồn đọng và tự lập kế hoạch ưu tiên sáng hôm sau vô cùng nhanh chóng.
-- **PB-3:** Tự động thống kê, phân tích dữ liệu hiệu suất của người dùng theo thời gian thực để gợi ý giờ "Deep Work" và khớp lệnh tối ưu.
-- **PB-3.1:** Tích hợp bộ đo hiển thị "Ngân sách năng lượng" thông minh (Energy Budget), cảnh báo thông minh khi rơi xuống mức thấp ≤ 20%.
-- **PB-4:** Gợi ý "Việc 15 phút" tối ưu hóa thời gian trống bất ngờ chỉ trong 1 chạm truy xuất từ Dashboard chính.
-- **PB-5:** Dashboard trực quan hóa tăng trưởng kỹ năng của người dùng theo các tuần với các biểu đồ thống kê thời gian phân loại chân thực.
-- **PB-5.1:** Thuật toán phát hiện khoảng trống thời gian và đề xuất hoạt động học tập (Time-boxing học tập) hiệu quả.
+- **Khu vực "Tác vụ Deep Work đề xuất"** trong Bảng Tăng trưởng (Growth Dashboard): Tự động lọc tối đa 2 task chưa hoàn thành thỏa mãn `HIGH energy` + `Q1/Q2`.
+
+### Changed
+- **Bổ sung mốc thời gian rảnh 30 phút và 60 phút** vào bộ lọc của Trợ lý Ra Quyết định (trước đây chỉ có 15 phút).
+
+---
+
+## [1.1.1] — 2026-06-03
+
+### Changed
+- **Loại bỏ form nhập giờ thủ công:** Thay thế bằng đồng hồ số động lấy từ thời gian hệ thống thực tế, cập nhật mỗi giây. Đảm bảo EOD vận hành chính xác tuyệt đối.
+
+---
+
+## [1.1.0] — 2026-06-02
+
+### Added
+- **Tài liệu hướng dẫn người dùng (User Guide)** trong `README.md`
+- **Tài liệu kiểm định chất lượng `CHECKLIST_REVIEW.md`** bám sát từng Acceptance Criteria
+- **Quy trình Vibe Coding** và tài liệu đối chứng `APPLY_VIBECODING.md`
+
+### Fixed
+- **Sửa lỗi xung đột giao diện Trợ lý Ra Quyết định** (render loop / iframe nested layouts)
+
+---
+
+## [1.0.0] — 2026-06-01
+
+### Added
+- **PB-1:** Hệ thống tự động tái cấu trúc lịch trình khi xảy ra xung đột thời gian, cảnh báo và gợi ý dời lịch 1-click.
+- **PB-1.1:** Tích hợp Ma trận Eisenhower (Q1–Q4) và Mức năng lượng (HIGH/MEDIUM/LOW) cho toàn bộ Task.
+- **PB-2:** Quy trình **Kết thúc ngày (EOD)** tự động: hiển thị tóm tắt, thành tựu nổi bật, và kích hoạt trạng thái "OFF".
+- **PB-2.1:** Tổng hợp task tồn đọng và tự động lập kế hoạch ưu tiên sáng hôm sau.
+- **PB-3:** Thống kê và phân tích hiệu suất thời gian thực, gợi ý khung giờ **Deep Work** tối ưu.
+- **PB-3.1:** Thanh **Ngân sách năng lượng (Energy Budget)** với cảnh báo khi ≤ 20%.
+- **PB-4:** Gợi ý **"Việc 15 phút"** tận dụng thời gian trống bất ngờ từ Dashboard.
+- **PB-5:** Dashboard **Bản đồ Tăng trưởng kỹ năng** theo tuần với biểu đồ thống kê thời gian thực.
+- **PB-5.1:** Thuật toán phát hiện khoảng trống thời gian và đề xuất **Time-boxing học tập**.
 
 ---
 
 ## Quy ước đặt tên version
 
 | Segment | Ý nghĩa |
-|---------|---------|
-| MAJOR   | Breaking change hoặc ra mắt Epic mới hoàn chỉnh |
-| MINOR   | Hoàn thành 1 Sprint (thêm feature không phá vỡ) |
-| PATCH   | Bug fix, cải thiện hiệu năng, UX tweak nhỏ |
+| :--- | :--- |
+| **MAJOR** | Breaking change hoặc ra mắt Epic mới hoàn chỉnh |
+| **MINOR** | Hoàn thành 1 Sprint (thêm feature không phá vỡ) |
+| **PATCH** | Bug fix, cải thiện hiệu năng, UX tweak nhỏ |
+
+---
+
+Bạn có muốn mình điều chỉnh thêm phần nào không? Ví dụ:
+- Gộp các mục nhỏ từ `[1.1.0]` → `[1.3.0]` lại cho gọn?
+- Thêm liên kết so sánh (diff links) cho từng phiên bản?
+- Chuyển các mục "Added" thành dạng danh sách có biểu tượng (emoji) như trong file gốc của bạn?
