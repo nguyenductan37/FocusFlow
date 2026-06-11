@@ -17,6 +17,18 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 
 ---
 
+## [1.8.0] — 2026-06-11
+
+### Added
+
+#### 📚 Tự Động Xếp Lịch Thông Minh (Smart Slot-Scheduling Nudge)
+- **Thuật toán chấm điểm phối hợp (Hybrid Scoring System):** Mở rộng cơ chế gợi ý ra tất cả các danh mục (Làm việc, Học tập, Admin...). Tự động chấm điểm các task chưa xếp lịch dựa trên 3 tiêu chí: độ khớp thời lượng, mức ưu tiên Eisenhower, và mức độ khớp năng lượng với giờ vàng sinh học theo Chronotype của người dùng.
+- **Giao diện Dropdown & Xếp lịch tức thời:** Thẻ gợi ý hiển thị task tối ưu nhất cùng một menu dropdown cho phép người dùng thay đổi sang các task phù hợp khác. Bấm "Xếp lịch ngay" sẽ cập nhật trực tiếp thời gian bắt đầu của task được chọn mà không cần mở modal tạo mới.
+- **Cơ chế ẩn thông minh (Dynamic Dismiss):** Khi người dùng nhấn "Bỏ qua", hệ thống lưu lại mốc giờ của khe trống và ẩn thẻ gợi ý cho riêng khe đó. Khi lịch trình thay đổi tạo ra khe trống mới, thẻ gợi ý sẽ tự động hiển thị lại.
+- **Chế độ dự phòng (Fallback):** Nếu không còn task chưa xếp lịch nào trong ngày, hệ thống sẽ gợi ý tạo mới một task học tập để củng cố kỹ năng.
+
+---
+
 ## [1.7.0] — 2026-06-11
 
 ### Added

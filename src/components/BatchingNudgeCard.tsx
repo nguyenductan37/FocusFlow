@@ -13,9 +13,7 @@ interface BatchingNudgeCardProps {
 const CATEGORY_NAMES: Record<TaskCategory, string> = {
   'Học tập': 'Học tập',
   'Làm việc': 'Làm việc',
-  'Phát triển bản thân': 'Phát triển bản thân',
-  'Sức khỏe': 'Sức khỏe',
-  'Cá nhân': 'Cá nhân',
+  'Admin': 'Hành chính',
 };
 
 export default function BatchingNudgeCard({

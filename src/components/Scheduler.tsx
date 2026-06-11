@@ -6,6 +6,7 @@
 import React, { useMemo } from 'react';
 import { AlertCircle, ArrowRight, Calendar, Check, Clock, Plus, HelpCircle, Zap } from 'lucide-react';
 import { Task, Chronotype } from '../types';
+import { getTodayDateString } from '../utils/dummyData';
 
 interface SchedulerProps {
   tasks: Task[];
@@ -13,6 +14,7 @@ interface SchedulerProps {
   onUpdateTaskTime: (taskId: string, newTime: string) => void;
   onOpenCreateTask: (defaultHour?: string) => void;
   onSelectTaskToEdit: (task: Task) => void;
+  onScheduleUnscheduledTask?: (taskId: string, scheduledTime: string) => void;
 }
 
 // Utility functions to calculate times
@@ -30,12 +32,10 @@ export function minutesToTimeString(mins: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-export default function Scheduler({ tasks, chronotype, onUpdateTaskTime, onOpenCreateTask, onSelectTaskToEdit }: SchedulerProps) {
-  // Load and manage study ignore count from localStorage (AC-PB51-03 & AC-PB51-04)
-  const [studyIgnoreCount, setStudyIgnoreCount] = React.useState<number>(() => {
-    const countStr = localStorage.getItem('focusflow_study_ignore_count');
-    return countStr ? Number(countStr) : 0;
-  });
+export default function Scheduler({ tasks, chronotype, onUpdateTaskTime, onOpenCreateTask, onSelectTaskToEdit, onScheduleUnscheduledTask }: SchedulerProps) {
+  // Local state for Smart Slot-Scheduling Nudge (PB-5.1)
+  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
+  const [dismissedSlot, setDismissedSlot] = React.useState<string | null>(null);
 
   // Extract scheduled non-done tasks for clashing computations
   const scheduledTasks = useMemo(() => {
@@ -75,43 +75,111 @@ export default function Scheduler({ tasks, chronotype, onUpdateTaskTime, onOpenC
   // Find educational time slots for PB-5.1 (Time-boxing học tập tự động)
   // Gaps of >= 20 mins between scheduled tasks or in morning slot
   const studySlotProposal = useMemo(() => {
-    if (studyIgnoreCount >= 3) return null;
+    let targetSlot: string | null = null;
+    let slotDuration = 30;
+    let reason = '';
 
     if (scheduledTasks.length === 0) {
       // If no scheduled tasks, suggest morning at 9:00
-      return { slot: '09:00', duration: 25, reason: 'Lịch sáng còn trống hoàn hảo' };
-    }
+      targetSlot = '09:00';
+      slotDuration = 25;
+      reason = 'Lịch sáng còn trống hoàn hảo';
+    } else {
+      // Try to find gaps >= 20 mins
+      for (let i = 0; i < scheduledTasks.length - 1; i++) {
+        const tA = scheduledTasks[i];
+        const endA = timeStringToMinutes(tA.scheduled_at!) + tA.estimated_min;
+        const startB = timeStringToMinutes(scheduledTasks[i + 1].scheduled_at!);
+        const gap = startB - endA;
 
-    // Try to find gaps >= 20 mins
-    for (let i = 0; i < scheduledTasks.length - 1; i++) {
-      const tA = scheduledTasks[i];
-      const endA = timeStringToMinutes(tA.scheduled_at!) + tA.estimated_min;
-      const startB = timeStringToMinutes(scheduledTasks[i + 1].scheduled_at!);
-      const gap = startB - endA;
+        if (gap >= 20) {
+          targetSlot = minutesToTimeString(endA);
+          slotDuration = Math.min(gap, 45);
+          reason = `Khoảng trống ${gap} phút giữa các nhiệm vụ`;
+          break;
+        }
+      }
 
-      if (gap >= 20) {
-        // Suggest slot at endA
-        return {
-          slot: minutesToTimeString(endA),
-          duration: Math.min(gap, 45),
-          reason: `Khoảng trống ${gap} phút giữa các nhiệm vụ`,
-        };
+      if (!targetSlot) {
+        // Otherwise find slot after the last scheduled task
+        const lastTask = scheduledTasks[scheduledTasks.length - 1];
+        const endLast = timeStringToMinutes(lastTask.scheduled_at!) + lastTask.estimated_min;
+        if (endLast < 17 * 60) { // before 17:00
+          targetSlot = minutesToTimeString(endLast);
+          slotDuration = 30;
+          reason = 'Khung giờ rảnh cuối chiều trước giờ nghỉ';
+        }
       }
     }
 
-    // Otherwise find slot after the last scheduled task
-    const lastTask = scheduledTasks[scheduledTasks.length - 1];
-    const endLast = timeStringToMinutes(lastTask.scheduled_at!) + lastTask.estimated_min;
-    if (endLast < 17 * 60) { // before 17:00
+    if (!targetSlot) return null;
+
+    // Search for all unscheduled tasks for today
+    const todayStr = getTodayDateString();
+    const unscheduledTasks = tasks.filter(t => 
+      !t.scheduled_at && 
+      t.status !== 'DONE' && 
+      t.status !== 'DEFERRED' &&
+      t.due_date === todayStr
+    );
+
+    if (unscheduledTasks.length > 0) {
+      const startHour = parseInt(targetSlot.split(':')[0], 10);
+      let isGoldenHour = false;
+      if (chronotype === 'EARLY_BIRD') {
+        isGoldenHour = startHour >= 8 && startHour < 11;
+      } else if (chronotype === 'NIGHT_OWL') {
+        isGoldenHour = startHour >= 20 && startHour < 22;
+      } else {
+        isGoldenHour = (startHour >= 9 && startHour < 11) || (startHour >= 14 && startHour < 16);
+      }
+
+      // Scoring algorithm to find the best matched task
+      const scoredTasks = unscheduledTasks.map(task => {
+        let score = 0;
+        
+        // 1. Duration Fit
+        if (task.estimated_min <= slotDuration) score += 50;
+        else score -= 20;
+        
+        // 2. Eisenhower Priority
+        if (task.eisenhower_q === 'Q1') score += 40;
+        else if (task.eisenhower_q === 'Q2') score += 35;
+        else if (task.eisenhower_q === 'Q3') score += 20;
+        else if (task.eisenhower_q === 'Q4') score += 10;
+        
+        // 3. Bio-hour Alignment
+        if (isGoldenHour) {
+          if (task.energy_level === 'HIGH') score += 30;
+          else if (task.energy_level === 'MEDIUM') score += 15;
+          else if (task.energy_level === 'LOW') score += 5;
+        } else {
+          if (task.energy_level === 'LOW') score += 20;
+          else if (task.energy_level === 'MEDIUM') score += 10;
+          else if (task.energy_level === 'HIGH') score -= 10;
+        }
+        
+        return { task, score };
+      });
+
+      // Sort by score descending
+      const candidates = scoredTasks.sort((a, b) => b.score - a.score).map(s => s.task);
+
       return {
-        slot: minutesToTimeString(endLast),
-        duration: 30,
-        reason: 'Khung giờ rảnh cuối chiều trước giờ nghỉ',
+        slot: targetSlot,
+        duration: slotDuration,
+        reason,
+        matchedTask: candidates[0],
+        candidates
       };
     }
 
-    return null;
-  }, [scheduledTasks, studyIgnoreCount]);
+    return {
+      slot: targetSlot,
+      duration: slotDuration,
+      reason
+    };
+  }, [scheduledTasks, tasks, chronotype]);
 
   // Find chronobiology nudges (PB-F3)
   const chronotypeNudges = useMemo(() => {
@@ -167,6 +235,9 @@ export default function Scheduler({ tasks, chronotype, onUpdateTaskTime, onOpenC
       default: return 'bg-slate-50 border-slate-200 text-slate-700';
     }
   };
+
+  const activeProposedTask = studySlotProposal?.candidates?.find(t => t.id === selectedTaskId) || studySlotProposal?.matchedTask;
+  const isNudgeVisible = studySlotProposal && studySlotProposal.slot !== dismissedSlot;
 
   return (
     <div className="space-y-6">
@@ -252,35 +323,63 @@ export default function Scheduler({ tasks, chronotype, onUpdateTaskTime, onOpenC
         </div>
       )}
 
-      {/* 📚 Educational Time-boxing Suggestions (PB-5.1) */}
-      {studySlotProposal && (
+      {/* 📚 Smart Slot-Scheduling Nudge (PB-5.1) */}
+      {isNudgeVisible && studySlotProposal && (
         <div id="education-timebox-container" className="p-4 bg-teal-50 border border-teal-100 rounded-2xl flex items-start gap-3 animate-fade-in">
-          <div className="p-1.5 bg-teal-600 text-white rounded-lg mt-0.5">
-            <Calendar className="w-4 h-4" />
+          <div className="p-1.5 bg-teal-600 text-white rounded-lg mt-0.5 shadow-sm">
+            <Zap className="w-4 h-4" />
           </div>
           <div className="flex-1 text-xs text-left">
-            <h5 className="font-bold text-teal-900">Gợi ý chèn giờ học tập (Time-boxing học tập)</h5>
-            <p className="text-teal-700 mt-0.5">{studySlotProposal.reason}. Đề xuất củng cố kỹ năng lúc <strong className="font-mono">{studySlotProposal.slot}</strong> ({studySlotProposal.duration} phút).</p>
-            <div className="mt-2.5 flex items-center gap-2">
+            <h5 className="font-bold text-teal-900">Gợi ý xếp lịch thông minh</h5>
+            
+            {activeProposedTask ? (
+              <div className="mt-1">
+                <p className="text-teal-700 mb-2 leading-relaxed">
+                  Phát hiện khoảng trống {studySlotProposal.duration} phút lúc <strong className="font-mono">{studySlotProposal.slot}</strong> ({studySlotProposal.reason}). Bạn muốn xếp lịch cho nhiệm vụ này chứ?
+                </p>
+                <select 
+                  className="w-full mb-3 p-2 bg-white border border-teal-200 rounded-lg text-teal-900 font-medium shadow-sm outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                  value={activeProposedTask.id}
+                  onChange={(e) => setSelectedTaskId(e.target.value)}
+                >
+                  {studySlotProposal.candidates?.map(c => (
+                    <option key={c.id} value={c.id}>
+                      [{c.category}] {c.title} ({c.estimated_min}m)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <p className="text-teal-700 mt-1 mb-2">
+                {studySlotProposal.reason}. Đề xuất củng cố kỹ năng lúc <strong className="font-mono">{studySlotProposal.slot}</strong> ({studySlotProposal.duration} phút).
+              </p>
+            )}
+
+            <div className="mt-2 flex items-center gap-2">
               <button
                 id="btn-confirm-timebox"
                 onClick={() => {
-                  onOpenCreateTask(studySlotProposal.slot);
+                  if (activeProposedTask) {
+                    onScheduleUnscheduledTask?.(activeProposedTask.id, studySlotProposal.slot);
+                    setDismissedSlot(null);
+                    setSelectedTaskId(null);
+                  } else {
+                    onOpenCreateTask(studySlotProposal.slot);
+                  }
                 }}
-                className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold rounded-lg cursor-pointer"
+                className="px-4 py-1.5 bg-teal-600 hover:bg-teal-700 active:scale-95 text-white text-[11px] font-bold rounded-lg cursor-pointer transition-all shadow-sm"
               >
-                Chèn học tập ngay
+                {activeProposedTask ? 'Xếp lịch ngay' : 'Tạo lịch học mới'}
               </button>
 
               <button
                 id="btn-ignore-timebox"
                 onClick={() => {
-                  const nextCount = studyIgnoreCount + 1;
-                  setStudyIgnoreCount(nextCount);
-                  localStorage.setItem('focusflow_study_ignore_count', String(nextCount));
+                  setDismissedSlot(studySlotProposal.slot);
+                  setSelectedTaskId(null);
                 }}
-                className="px-3 py-1.5 bg-white hover:bg-gray-100 text-teal-800 text-[11px] font-bold rounded-lg cursor-pointer border border-teal-200 transition-colors"
-                title="Bỏ qua gợi ý này"
+                className="px-4 py-1.5 bg-white hover:bg-teal-50 text-teal-700 text-[11px] font-bold rounded-lg cursor-pointer border border-teal-200 transition-colors"
+                title="Bỏ qua khe trống này"
               >
                 Bỏ qua
               </button>

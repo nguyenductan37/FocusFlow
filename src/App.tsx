@@ -799,6 +799,7 @@ export default function App() {
                 tasks={tasks}
                 chronotype={chronotype}
                 onUpdateTaskTime={handleUpdateTaskTime}
+                onScheduleUnscheduledTask={handleUpdateTaskTime}
                 onOpenCreateTask={(hour) => handleOpenCreateWithPresets(25, hour)}
                 onSelectTaskToEdit={(t) => {
                   setTaskToEdit(t);
