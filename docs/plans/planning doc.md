@@ -4,6 +4,8 @@ Tài liệu này phác thảo chi tiết ý tưởng, cơ chế hoạt động v
 
 ---
 
+## 📅 Phiên Thảo Luận: 2026-06-10 (Hôm qua)
+
 ## 1. Sinh Vật Nhịp Sinh Học (Gamified Bio-Pet)
 
 ### 1.1. Ý tưởng (Concept)
@@ -58,3 +60,43 @@ Tài liệu này phác thảo chi tiết ý tưởng, cơ chế hoạt động v
   * Hoàn toàn sử dụng các thuật toán tính toán logic phía Client (JS/TS) dựa trên lịch sử tương tác task.
   * Sử dụng một thanh đo trạng thái (Radial Progress Bar hoặc Wave animation) trên Dashboard để người dùng dễ quan sát.
 * **Rủi ro:** Cần tinh chỉnh lại các hệ số nhân/chia điểm CLI qua thử nghiệm thực tế để đảm bảo chỉ số phản ánh chính xác cảm giác mệt mỏi của người dùng, tránh gây phiền nhiễu do cảnh báo quá thường xuyên.
+
+---
+
+## 📅 Phiên Thảo Luận: 2026-06-11 (Hôm nay)
+
+### 3. Nhóm Ý Tưởng: Game Hóa (Gamification)
+
+#### 3.1. Bản Đồ Phiêu Lưu Nhận Thức (Cognitive Quest Map)
+* **Mô tả:** Thay vì chỉ hiển thị điểm XP và level thông thường, mỗi tuần người dùng sẽ cùng Pet "thám hiểm" trên một bản đồ hành trình phiêu lưu dạng SVG cuộn mượt mà.
+* **Cơ chế:** Mỗi bước đi tương đương với điểm Bio-XP tích lũy được trong ngày. Khi đi qua các vùng đất sinh học (ví dụ: *Thung lũng Sơn Ca*, *Đầm lầy Trì Hoãn*, *Đỉnh núi Tập Trung*), người dùng có cơ hội mở khóa các cột mốc lịch sử, nhận "Huy hiệu Nhận thức" hoặc các tài nguyên để xây dựng ngôi nhà ảo cho Pet (Focus Cabin).
+* **Tính khả thi:** Trung bình (Medium) - Chủ yếu xử lý giao diện bản đồ SVG và lưu trữ tọa độ bước đi.
+
+#### 3.2. Đấu Trường Tập Trung (Focus Guild / Shadow Boss Battle)
+* **Mô tả:** Biến việc chạy Pomodoro thành một trận chiến săn Boss lớn cùng tổ đội ảo.
+* **Cơ chế:** Mỗi tuần, hệ thống sinh ra một "Boss Trì Hoãn Khổng Lồ" (ví dụ: *Quái thú Facebook*, *Chúa tể Youtube*). Người dùng chạy Pomodoro để tạo ra "sức mạnh tấn công" (Damage) tiêu diệt Boss. Tiêu diệt Boss sẽ nhận trang phục giới hạn.
+* **Tính khả thi:** Cao (High) - Cần xử lý cơ chế Boss tự động và hoạt họa phức tạp hơn.
+
+### 4. Nhóm Ý Tưởng: Khoa Học Nhận Thức (Cognitive Science)
+
+#### 4.1. Nhật Ký Nhịp Điệu Sinh Học Tự Học (Chrono-Analytics Curve)
+* **Mô tả:** Hệ thống theo dõi hiệu suất thực tế của người dùng theo thời gian thực (thời gian tích DONE, hiệu suất Pomodoro, mức năng lượng tự đánh giá) để vẽ lại biểu đồ năng lượng cá nhân hóa thực tế.
+* **Cơ chế:** Sau 7 ngày, AI đối chiếu biểu đồ lý thuyết (Chronotype ban đầu) với biểu đồ thực tế của người dùng để đưa ra gợi ý: *"Mặc dù bạn thuộc nhóm Sơn Ca, nhưng hiệu suất thực tế của bạn lại cao nhất lúc 14:00. Hệ thống đề xuất cập nhật lại khung giờ vàng của bạn."*
+* **Tính khả thi:** Trung bình - Thấp (Low-Medium) - Cần thuật toán thu thập dữ liệu thời gian thực và vẽ đồ thị so sánh trực quan.
+
+#### 4.2. Trình Phục Hồi Nhận Thức Chủ Động (Active Cognitive Restorer)
+* **Mô tả:** Khi chỉ số quá tải nhận thức (CLI) vượt ngưỡng 80% (mức đỏ rực nhấp nháy), hệ thống đề xuất một "Micro-break" 2 phút để hạ nhiệt tinh thần trước khi cho phép bắt đầu Pomodoro tiếp theo.
+* **Cơ chế:** Kích hoạt giao diện nghỉ ngơi nhanh với bài tập ngắn kèm nhạc sóng não Binaural Beats giảm stress (thở thư giãn co giãn vòng tròn, bài tập bảo vệ mắt, hoặc viết nhanh điều gây xao nhãng để AI xóa tan đi).
+* **Tính khả thi:** Thấp (Low) - Dễ tích hợp trực tiếp vào logic CLI hiện tại.
+
+### 5. Nhóm Ý Tưởng: Quản Lý Công Việc Thông Minh (Smart Task Management)
+
+#### 5.1. Auto-Pilot Time Boxing (AI Tự Động Lên Lịch Trình)
+* **Mô tả:** Người dùng chỉ cần nhập danh sách việc cần làm. AI (Gemini) sẽ tự động phân bổ toàn bộ công việc vào các block thời gian trống trong ngày một cách tối ưu.
+* **Cơ chế:** Sắp xếp task HIGH energy vào Khung giờ vàng sinh học, gom các task LOW energy thành cụm (Batching) vào cuối buổi chiều, và tự động chèn các khoảng nghỉ đệm (Buffer time) 5-10 phút giữa các task lớn để tránh tăng CLI quá nhanh.
+* **Tính khả thi:** Cao (High) - Cần prompt Gemini trả về JSON chính xác và xử lý va chạm giờ.
+
+#### 5.2. Trợ Lý Phát Hiện Điểm Nghẽn Công Việc (AI Bottleneck Finder)
+* **Mô tả:** Tự động phát hiện các task bị trì hoãn dai dẳng hoặc bị gắn nhãn `BLOCKED` để đưa ra giải pháp gỡ rối bằng AI.
+* **Cơ chế:** Khi một task bị dời lịch nhiều ngày, AI sẽ phân tích nội dung và đưa ra gợi ý giải pháp: tách nhỏ task, bổ sung tài liệu cần thiết, hoặc cảnh báo nếu task quá mơ hồ.
+* **Tính khả thi:** Trung bình (Medium).

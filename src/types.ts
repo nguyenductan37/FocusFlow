@@ -17,6 +17,8 @@ export interface BioPetState {
   level: number;
   xp: number;
   name?: string;
+  unlockedAccessories?: string[];
+  equippedAccessories?: string[];
 }
 
 export interface Task {
@@ -34,6 +36,8 @@ export interface Task {
   due_date?: string;           // Ngày cần làm (YYYY-MM-DD)
   postpone_count?: number;     // Số lần task bị dời due_date sang ngày khác
   postpone_reasons?: string[]; // Lý do hoãn task (PB-F6)
+  parentId?: string;           // ID của task cha khi rã nhỏ (PB-F7)
+  isShadowStep?: boolean;      // Đánh dấu là mảnh vỡ bóng tối (PB-F7)
 }
 
 export interface EnergyStatus {

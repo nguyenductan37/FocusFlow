@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BioPetState, Chronotype } from '../types';
+import { BioPetState, Chronotype, Task } from '../types';
 import { Sparkles, Edit2, Check, Moon } from 'lucide-react';
 
 interface BioPetWidgetProps {
@@ -7,14 +7,26 @@ interface BioPetWidgetProps {
   petState: BioPetState;
   onRenamePet: (newName: string) => void;
   onStartSurvey: () => void;
+  tasks: Task[];
+  onUpdateAccessories: (equipped: string[]) => void;
 }
 
-export default function BioPetWidget({ chronotype, petState, onRenamePet, onStartSurvey }: BioPetWidgetProps) {
+export default function BioPetWidget({ 
+  chronotype, 
+  petState, 
+  onRenamePet, 
+  onStartSurvey,
+  tasks,
+  onUpdateAccessories 
+}: BioPetWidgetProps) {
   const [showPopover, setShowPopover] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(petState.name || 'Linh Vật');
   const [speechBubble, setSpeechBubble] = useState<string | null>(null);
   const [isFatigued, setIsFatigued] = useState(false);
+
+  // Check if there are active shadow steps
+  const hasActiveShadowSteps = tasks?.some(t => t.isShadowStep && t.status !== 'DONE') || false;
 
   // Sync pet name
   useEffect(() => {
@@ -63,7 +75,15 @@ export default function BioPetWidget({ chronotype, petState, onRenamePet, onStar
     if (!chronotype) {
       setSpeechBubble('Hãy nhấp vào tôi để ấp nở nhé!');
     } else {
-      if (isFatigued) {
+      if (hasActiveShadowSteps) {
+        const phrases = [
+          'Tôi cảm nhận được nguồn năng lượng trì hoãn! Hãy dọn dẹp các mảnh vỡ!',
+          'Hãy tiêu diệt các mảnh vỡ bóng tối!',
+          'Cố lên dũng sĩ, tôi đang yểm trợ bạn!',
+          'Hãy cùng dọn dẹp các mảnh vỡ bóng tối!'
+        ];
+        setSpeechBubble(phrases[Math.floor(Math.random() * phrases.length)]);
+      } else if (isFatigued) {
         const phrases = ['Tôi buồn ngủ quá...', 'Zzz... Khò khò...', 'Bạn đã nghỉ ngơi chưa?'];
         setSpeechBubble(phrases[Math.floor(Math.random() * phrases.length)]);
       } else {
@@ -91,81 +111,186 @@ export default function BioPetWidget({ chronotype, petState, onRenamePet, onStar
     </svg>
   );
 
-  const renderEarlyBird = () => (
-    <svg viewBox="0 0 100 100" className={`w-16 h-16 ${isFatigued ? 'opacity-80' : 'animate-bounce-subtle'}`}>
-      {/* Body */}
-      <circle cx="50" cy="60" r="30" fill="#FDE047" />
-      {/* Wings */}
-      <path d="M 25 55 Q 15 65 25 75 Z" fill="#FACC15" />
-      <path d="M 75 55 Q 85 65 75 75 Z" fill="#FACC15" />
-      {/* Eyes */}
-      {isFatigued ? (
-        <>
-          <path d="M 35 50 Q 40 45 45 50" fill="none" stroke="#854D0E" strokeWidth="3" strokeLinecap="round" />
-          <path d="M 55 50 Q 60 45 65 50" fill="none" stroke="#854D0E" strokeWidth="3" strokeLinecap="round" />
-        </>
-      ) : (
-        <>
-          <circle cx="40" cy="50" r="4" fill="#854D0E" />
-          <circle cx="60" cy="50" r="4" fill="#854D0E" />
-        </>
-      )}
-      {/* Beak */}
-      <path d="M 45 58 L 55 58 L 50 65 Z" fill="#F97316" />
-    </svg>
-  );
+  const renderEarlyBird = () => {
+    const isEquipped = (accId: string) => petState.equippedAccessories?.includes(accId);
+    return (
+      <svg viewBox="0 0 100 100" className={`w-16 h-16 ${isFatigued ? 'opacity-80' : 'animate-bounce-subtle'}`}>
+        {/* Body */}
+        <circle cx="50" cy="60" r="30" fill="#FDE047" />
+        {/* Wings */}
+        <path d="M 25 55 Q 15 65 25 75 Z" fill="#FACC15" />
+        <path d="M 75 55 Q 85 65 75 75 Z" fill="#FACC15" />
+        {/* Eyes & Brows */}
+        {hasActiveShadowSteps ? (
+          <>
+            <path d="M 32 43 L 44 47" stroke="#854D0E" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M 68 43 L 56 47" stroke="#854D0E" strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx="40" cy="52" r="4" fill="#854D0E" />
+            <circle cx="60" cy="52" r="4" fill="#854D0E" />
+          </>
+        ) : isFatigued ? (
+          <>
+            <path d="M 35 50 Q 40 45 45 50" fill="none" stroke="#854D0E" strokeWidth="3" strokeLinecap="round" />
+            <path d="M 55 50 Q 60 45 65 50" fill="none" stroke="#854D0E" strokeWidth="3" strokeLinecap="round" />
+          </>
+        ) : (
+          <>
+            <circle cx="40" cy="50" r="4" fill="#854D0E" />
+            <circle cx="60" cy="50" r="4" fill="#854D0E" />
+          </>
+        )}
+        {/* Beak */}
+        <path d="M 45 58 L 55 58 L 50 65 Z" fill="#F97316" />
 
-  const renderNightOwl = () => (
-    <svg viewBox="0 0 100 100" className={`w-16 h-16 ${isFatigued ? 'opacity-80' : 'animate-pulse'}`}>
-      {/* Body */}
-      <path d="M 20 80 C 20 30 80 30 80 80 Z" fill="#6366F1" />
-      {/* Ears */}
-      <path d="M 25 40 L 20 20 L 40 30 Z" fill="#4F46E5" />
-      <path d="M 75 40 L 80 20 L 60 30 Z" fill="#4F46E5" />
-      {/* Eyes */}
-      <circle cx="35" cy="55" r="12" fill="#E0E7FF" />
-      <circle cx="65" cy="55" r="12" fill="#E0E7FF" />
-      {isFatigued ? (
-        <>
-          <path d="M 28 55 H 42" stroke="#312E81" strokeWidth="4" strokeLinecap="round" />
-          <path d="M 58 55 H 72" stroke="#312E81" strokeWidth="4" strokeLinecap="round" />
-        </>
-      ) : (
-        <>
-          <circle cx="35" cy="55" r="5" fill="#312E81" />
-          <circle cx="65" cy="55" r="5" fill="#312E81" />
-        </>
-      )}
-      {/* Beak */}
-      <path d="M 47 62 L 53 62 L 50 68 Z" fill="#FBBF24" />
-    </svg>
-  );
+        {/* Accessories */}
+        {isEquipped('toy_sword') && (
+          <g id="eb-toy-sword">
+            <rect x="18" y="45" width="4" height="20" rx="1" fill="#A16207" stroke="#78350F" strokeWidth="1" transform="rotate(-15, 20, 55)" />
+            <rect x="14" y="58" width="12" height="3" rx="0.5" fill="#D97706" stroke="#78350F" strokeWidth="1" transform="rotate(-15, 20, 55)" />
+            <rect x="19" y="65" width="2" height="5" fill="#78350F" transform="rotate(-15, 20, 55)" />
+          </g>
+        )}
+        {isEquipped('wooden_shield') && (
+          <g id="eb-wooden-shield">
+            <circle cx="78" cy="62" r="9" fill="#B45309" stroke="#78350F" strokeWidth="1.5" />
+            <circle cx="78" cy="62" r="6" fill="none" stroke="#F97316" strokeWidth="1" />
+            <line x1="78" y1="53" x2="78" y2="71" stroke="#78350F" strokeWidth="1" />
+            <line x1="69" y1="62" x2="87" y2="62" stroke="#78350F" strokeWidth="1" />
+          </g>
+        )}
+        {isEquipped('hero_crown') && (
+          <g id="eb-hero-crown">
+            <path d="M 38 32 L 40 22 L 46 27 L 50 20 L 54 27 L 60 22 L 62 32 Z" fill="#FBBF24" stroke="#D97706" strokeWidth="1.5" />
+            <circle cx="50" cy="21" r="1.5" fill="#EF4444" />
+            <circle cx="40" cy="23" r="1" fill="#3B82F6" />
+            <circle cx="60" cy="23" r="1" fill="#3B82F6" />
+          </g>
+        )}
+      </svg>
+    );
+  };
 
-  const renderThirdBird = () => (
-    <svg viewBox="0 0 100 100" className={`w-16 h-16 ${isFatigued ? 'opacity-80' : ''}`} style={{ transform: isFatigued ? 'none' : 'rotate(5deg)' }}>
-      {/* Body */}
-      <ellipse cx="50" cy="65" rx="25" ry="30" fill="#86EFAC" />
-      {/* Head */}
-      <circle cx="50" cy="35" r="20" fill="#86EFAC" />
-      {/* Eyes */}
-      {isFatigued ? (
-        <>
-          <path d="M 40 32 H 48" stroke="#14532D" strokeWidth="3" strokeLinecap="round" />
-          <path d="M 58 32 H 66" stroke="#14532D" strokeWidth="3" strokeLinecap="round" />
-        </>
-      ) : (
-        <>
-          <circle cx="42" cy="32" r="3" fill="#14532D" />
-          <circle cx="62" cy="32" r="3" fill="#14532D" />
-        </>
-      )}
-      {/* Beak */}
-      <path d="M 48 38 L 56 38 L 52 44 Z" fill="#F59E0B" />
-      {/* Wings */}
-      <path d="M 25 60 Q 15 70 28 80 Z" fill="#4ADE80" />
-      <path d="M 75 60 Q 85 70 72 80 Z" fill="#4ADE80" />
-    </svg>
-  );
+  const renderNightOwl = () => {
+    const isEquipped = (accId: string) => petState.equippedAccessories?.includes(accId);
+    return (
+      <svg viewBox="0 0 100 100" className={`w-16 h-16 ${isFatigued ? 'opacity-80' : 'animate-pulse'}`}>
+        {/* Body */}
+        <path d="M 20 80 C 20 30 80 30 80 80 Z" fill="#6366F1" />
+        {/* Ears */}
+        <path d="M 25 40 L 20 20 L 40 30 Z" fill="#4F46E5" />
+        <path d="M 75 40 L 80 20 L 60 30 Z" fill="#4F46E5" />
+        {/* Eyes */}
+        <circle cx="35" cy="55" r="12" fill="#E0E7FF" />
+        <circle cx="65" cy="55" r="12" fill="#E0E7FF" />
+        {hasActiveShadowSteps ? (
+          <>
+            <path d="M 25 40 L 42 48" stroke="#312E81" strokeWidth="3.5" strokeLinecap="round" />
+            <path d="M 75 40 L 58 48" stroke="#312E81" strokeWidth="3.5" strokeLinecap="round" />
+            <circle cx="35" cy="55" r="5" fill="#312E81" />
+            <circle cx="65" cy="55" r="5" fill="#312E81" />
+          </>
+        ) : isFatigued ? (
+          <>
+            <path d="M 28 55 H 42" stroke="#312E81" strokeWidth="4" strokeLinecap="round" />
+            <path d="M 58 55 H 72" stroke="#312E81" strokeWidth="4" strokeLinecap="round" />
+          </>
+        ) : (
+          <>
+            <circle cx="35" cy="55" r="5" fill="#312E81" />
+            <circle cx="65" cy="55" r="5" fill="#312E81" />
+          </>
+        )}
+        {/* Beak */}
+        <path d="M 47 62 L 53 62 L 50 68 Z" fill="#FBBF24" />
+
+        {/* Accessories */}
+        {isEquipped('toy_sword') && (
+          <g id="no-toy-sword">
+            <rect x="14" y="55" width="4" height="20" rx="1" fill="#A16207" stroke="#78350F" strokeWidth="1" transform="rotate(-20, 16, 65)" />
+            <rect x="10" y="68" width="12" height="3" rx="0.5" fill="#D97706" stroke="#78350F" strokeWidth="1" transform="rotate(-20, 16, 65)" />
+            <rect x="15" y="75" width="2" height="5" fill="#78350F" transform="rotate(-20, 16, 65)" />
+          </g>
+        )}
+        {isEquipped('wooden_shield') && (
+          <g id="no-wooden-shield">
+            <circle cx="82" cy="70" r="9" fill="#B45309" stroke="#78350F" strokeWidth="1.5" />
+            <circle cx="82" cy="70" r="6" fill="none" stroke="#F97316" strokeWidth="1" />
+            <line x1="82" y1="61" x2="82" y2="79" stroke="#78350F" strokeWidth="1" />
+            <line x1="73" y1="70" x2="91" y2="70" stroke="#78350F" strokeWidth="1" />
+          </g>
+        )}
+        {isEquipped('hero_crown') && (
+          <g id="no-hero-crown">
+            <path d="M 38 28 L 40 18 L 46 23 L 50 16 L 54 23 L 60 18 L 62 28 Z" fill="#FBBF24" stroke="#D97706" strokeWidth="1.5" />
+            <circle cx="50" cy="17" r="1.5" fill="#EF4444" />
+            <circle cx="40" cy="19" r="1" fill="#3B82F6" />
+            <circle cx="60" cy="19" r="1" fill="#3B82F6" />
+          </g>
+        )}
+      </svg>
+    );
+  };
+
+  const renderThirdBird = () => {
+    const isEquipped = (accId: string) => petState.equippedAccessories?.includes(accId);
+    return (
+      <svg viewBox="0 0 100 100" className={`w-16 h-16 ${isFatigued ? 'opacity-80' : ''}`} style={{ transform: isFatigued ? 'none' : 'rotate(5deg)' }}>
+        {/* Body */}
+        <ellipse cx="50" cy="65" rx="25" ry="30" fill="#86EFAC" />
+        {/* Head */}
+        <circle cx="50" cy="35" r="20" fill="#86EFAC" />
+        {/* Eyes & brows */}
+        {hasActiveShadowSteps ? (
+          <>
+            <path d="M 33 22 L 45 27" stroke="#14532D" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M 67 22 L 55 27" stroke="#14532D" strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx="42" cy="32" r="3" fill="#14532D" />
+            <circle cx="62" cy="32" r="3" fill="#14532D" />
+          </>
+        ) : isFatigued ? (
+          <>
+            <path d="M 40 32 H 48" stroke="#14532D" strokeWidth="3" strokeLinecap="round" />
+            <path d="M 58 32 H 66" stroke="#14532D" strokeWidth="3" strokeLinecap="round" />
+          </>
+        ) : (
+          <>
+            <circle cx="42" cy="32" r="3" fill="#14532D" />
+            <circle cx="62" cy="32" r="3" fill="#14532D" />
+          </>
+        )}
+        {/* Beak */}
+        <path d="M 48 38 L 56 38 L 52 44 Z" fill="#F59E0B" />
+        {/* Wings */}
+        <path d="M 25 60 Q 15 70 28 80 Z" fill="#4ADE80" />
+        <path d="M 75 60 Q 85 70 72 80 Z" fill="#4ADE80" />
+
+        {/* Accessories */}
+        {isEquipped('toy_sword') && (
+          <g id="tb-toy-sword">
+            <rect x="20" y="50" width="4" height="20" rx="1" fill="#A16207" stroke="#78350F" strokeWidth="1" transform="rotate(-15, 22, 60)" />
+            <rect x="16" y="63" width="12" height="3" rx="0.5" fill="#D97706" stroke="#78350F" strokeWidth="1" transform="rotate(-15, 22, 60)" />
+            <rect x="21" y="70" width="2" height="5" fill="#78350F" transform="rotate(-15, 22, 60)" />
+          </g>
+        )}
+        {isEquipped('wooden_shield') && (
+          <g id="tb-wooden-shield">
+            <circle cx="78" cy="65" r="9" fill="#B45309" stroke="#78350F" strokeWidth="1.5" />
+            <circle cx="78" cy="65" r="6" fill="none" stroke="#F97316" strokeWidth="1" />
+            <line x1="78" y1="56" x2="78" y2="74" stroke="#78350F" strokeWidth="1" />
+            <line x1="69" y1="65" x2="87" y2="65" stroke="#78350F" strokeWidth="1" />
+          </g>
+        )}
+        {isEquipped('hero_crown') && (
+          <g id="tb-hero-crown">
+            <path d="M 38 18 L 40 8 L 46 13 L 50 6 L 54 13 L 60 8 L 62 18 Z" fill="#FBBF24" stroke="#D97706" strokeWidth="1.5" />
+            <circle cx="50" cy="7" r="1.5" fill="#EF4444" />
+            <circle cx="40" cy="9" r="1" fill="#3B82F6" />
+            <circle cx="60" cy="9" r="1" fill="#3B82F6" />
+          </g>
+        )}
+      </svg>
+    );
+  };
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
@@ -235,13 +360,58 @@ export default function BioPetWidget({ chronotype, petState, onRenamePet, onStar
                 </div>
               )}
             </div>
+
+            {/* Accessories Closet section */}
+            <div className="pt-2.5 border-t border-slate-100 space-y-2">
+              <span className="block text-[10px] text-slate-400 font-bold uppercase">⚔️ Trang bị dũng sĩ</span>
+              <div className="space-y-1.5 text-xs">
+                {[
+                  { id: 'toy_sword', name: 'Kiếm đồ chơi ⚔️' },
+                  { id: 'wooden_shield', name: 'Khiên gỗ 🛡️' },
+                  { id: 'hero_crown', name: 'Vương miện dũng sĩ 👑' }
+                ].map(acc => {
+                  const isUnlocked = petState.unlockedAccessories?.includes(acc.id);
+                  const isEquipped = petState.equippedAccessories?.includes(acc.id);
+                  
+                  return (
+                    <div key={acc.id} className="flex items-center justify-between">
+                      <span className={`font-medium ${isUnlocked ? 'text-slate-700' : 'text-slate-400 italic'}`}>
+                        {!isUnlocked && '🔒 '}{acc.name}
+                      </span>
+                      {isUnlocked && (
+                        <button
+                          onClick={() => {
+                            const currentEquipped = petState.equippedAccessories || [];
+                            const newEquipped = isEquipped
+                              ? currentEquipped.filter(id => id !== acc.id)
+                              : [...currentEquipped, acc.id];
+                            onUpdateAccessories(newEquipped);
+                          }}
+                          className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition ${
+                            isEquipped 
+                              ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' 
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                        >
+                          {isEquipped ? 'Tháo ra' : 'Trang bị'}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* Pet Container */}
       <div 
-        className="relative w-20 h-20 rounded-full bg-white/60 backdrop-blur-md border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
+        className={`relative w-20 h-20 rounded-full bg-white/60 backdrop-blur-md border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-center cursor-pointer hover:scale-105 transition-transform ${
+          hasActiveShadowSteps 
+            ? 'border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.5)] animate-pulse' 
+            : ''
+        }`}
         onClick={handlePetClick}
         onMouseEnter={handlePetHover}
         onMouseLeave={handlePetLeave}

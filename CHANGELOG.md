@@ -17,6 +17,26 @@ Tất cả thay đổi đáng chú ý của dự án FocusFlow được ghi lạ
 
 ---
 
+## [1.7.0] — 2026-06-11
+
+### Added
+
+#### ⚔️ Hệ thống Tiêu diệt Task Bóng Tối (Slay the Shadow Tasks)
+- **Cơ chế phân loại & theo dõi:** Cập nhật logic rã nhỏ task trì hoãn (`handleSplitTask`) để gán `parentId` liên kết và đánh dấu `isShadowStep: true` cho các task con mới.
+- **Giao diện mảnh vỡ bóng tối:** Tạo style viền tím nhạt nhấp nháy phát sáng (`border-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]`), gắn thêm nhãn dán tím `👾 Mảnh vỡ bóng tối` và biểu tượng kiếm chéo `⚔️` cạnh tiêu đề các task con chưa hoàn thành.
+- **Banner tiến trình chiến đấu:** Hiển thị banner màu tím ở đầu danh sách nhiệm vụ để theo dõi tiến trình: `👾 Đang bao vây Quái vật bóng tối (${category}) — Tiến độ: ${completed}/${total} mảnh` kèm thanh tiến trình trực quan.
+- **Cơ chế dứt điểm (Victory Slay Check):** Khi hoàn thành mảnh vỡ cuối cùng trong nhóm:
+  - Cộng ngay $+50$ Bio-XP cho linh vật đồng hành.
+  - Tự động mở khóa ngẫu nhiên một trong ba phụ kiện dũng sĩ: **Kiếm đồ chơi (`toy_sword`)**, **Khiên gỗ (`wooden_shield`)**, hoặc **Vương miện dũng sĩ (`hero_crown`)** (đảm bảo không trùng món đã có).
+  - Trình duyệt phát hiệu ứng âm thanh Victory arpeggio qua Web Audio API.
+
+#### 🛡️ Trang bị dũng sĩ & Tủ đồ Linh vật (Pet Gear & Closet)
+- **Linh vật Chiến đấu (Bio-Pet Battle Mode):** Khi có mảnh vỡ bóng tối chưa hoàn thành trong ngày, linh vật sẽ chuyển sang trạng thái chiến đấu: thay đổi mắt sang dạng tập trung nghiêm túc (lông mày xếch chéo), vòng hào quang quanh linh vật phát sáng tím nhấp nháy, và phát ra các câu thoại bong bóng cảnh giác dũng mãnh.
+- **Khu vực Trang bị dũng sĩ:** Tích hợp khu vực **"⚔️ Trang bị dũng sĩ"** trong Popover thông số linh vật để người dùng dễ dàng bấm "Trang bị" hoặc "Tháo ra" các phụ kiện đã mở khóa.
+- **Hiển thị SVG trang bị động:** Nhúng các nhóm hình vẽ SVG của phụ kiện (Kiếm đồ chơi, Khiên gỗ, Vương miện) đè lên cơ thể của cả 3 dòng linh vật (Sơn Ca, Cú Đêm, Bồ Câu) theo tọa độ tỷ lệ chuẩn xác.
+
+---
+
 ## [1.6.0] — 2026-06-10
 
 ### Added

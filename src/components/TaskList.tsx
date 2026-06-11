@@ -47,6 +47,25 @@ export default function TaskList({
     });
   }, [tasks, filterQuarter, filterEnergy, filterCategory, filterStatus]);
 
+  // Compute shadow tasks groups battle progress
+  const shadowGroups = useMemo(() => {
+    const groups: Record<string, { total: number; completed: number; category: string }> = {};
+    tasks.forEach(t => {
+      if (t.isShadowStep && t.parentId) {
+        if (!groups[t.parentId]) {
+          groups[t.parentId] = { total: 0, completed: 0, category: t.category };
+        }
+        groups[t.parentId].total += 1;
+        if (t.status === 'DONE') {
+          groups[t.parentId].completed += 1;
+        }
+      }
+    });
+    return Object.entries(groups)
+      .filter(([_, g]) => g.completed < g.total)
+      .map(([parentId, g]) => ({ parentId, ...g }));
+  }, [tasks]);
+
   const getQuadrantLabel = (q: string) => {
     switch (q) {
       case 'Q1': return 'Q1: Quan trọng/Khẩn cấp';
@@ -83,7 +102,7 @@ export default function TaskList({
 
   return (
     <div className="space-y-4">
-      
+
       {/* Filters Hub Card (AC-PB11-04) */}
       <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl shadow-xs space-y-3">
         <div className="flex items-center gap-2 text-slate-800">
@@ -174,6 +193,27 @@ export default function TaskList({
         )}
       </div>
 
+      {/* 👾 Shadow Group Battle Progress Banners */}
+      {shadowGroups.map(group => {
+        const percent = Math.round((group.completed / group.total) * 100);
+        return (
+          <div key={group.parentId} className="p-3 bg-purple-50/70 border border-purple-200 rounded-2xl flex flex-col gap-1.5 shadow-xs animate-pulse">
+            <div className="flex items-center justify-between text-xs text-purple-900 font-bold">
+              <span className="flex items-center gap-1.5">
+                <span>👾</span>
+                <span>Đang bao vây Quái vật bóng tối ({group.category}) — Tiến độ: {group.completed}/{group.total} mảnh</span>
+              </span>
+            </div>
+            <div className="w-full bg-purple-100 h-2 rounded-full overflow-hidden">
+              <div 
+                className="bg-purple-600 h-full rounded-full transition-all duration-300"
+                style={{ width: `${percent}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+
       {/* Primary list */}
       <div className="space-y-2">
         <div className="flex items-center justify-between pb-2">
@@ -202,6 +242,10 @@ export default function TaskList({
                   id={`task-item-${task.id}`}
                   className={`p-4 bg-white border border-gray-100 hover:border-indigo-150 rounded-2xl flex items-start gap-3 transition shadow-[0_2px_6px_rgba(0,0,0,0.015)] group relative ${
                     isDone ? 'opacity-65' : ''
+                  } ${
+                    task.isShadowStep && !isDone
+                      ? 'border-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)] bg-gradient-to-r from-purple-50/60 to-indigo-50/40 animate-pulse'
+                      : ''
                   }`}
                 >
                   {/* Mark Completion trigger checkmark */}
@@ -225,6 +269,7 @@ export default function TaskList({
                         {getCategoryIcon(task.category)}
                       </span>
                       <h4 className={`font-sans font-semibold text-xs text-slate-800 leading-snug truncate cursor-pointer hover:text-indigo-600 transition-colors ${isDone ? 'line-through text-gray-400' : ''}`}>
+                        {task.isShadowStep && !isDone && <span className="mr-1">⚔️</span>}
                         {task.title}
                       </h4>
                       {task.scheduled_at && (
@@ -242,6 +287,11 @@ export default function TaskList({
 
                     {/* Meta Indicators row (AC-PB11-03) */}
                     <div className="flex flex-wrap gap-1.5 items-center">
+                      {task.isShadowStep && (
+                        <span className="px-2 py-0.5 bg-purple-100 border border-purple-200 text-purple-700 text-[9px] font-bold rounded-lg uppercase flex items-center gap-0.5">
+                          <span>👾</span> Mảnh vỡ bóng tối
+                        </span>
+                      )}
                       <span className={`px-2 py-0.5 border text-[9px] font-bold rounded-lg uppercase ${getQuadrantColor(task.eisenhower_q)}`}>
                         {getQuadrantLabel(task.eisenhower_q)}
                       </span>
