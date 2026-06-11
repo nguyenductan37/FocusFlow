@@ -91,10 +91,10 @@ export default function App() {
   // PB-F6: Trigger Focus Mode when time matches
   useEffect(() => {
     if (focusTask) return;
-    
+
     const today = getTodayDateString();
-    
-    const scheduledTask = tasks.find(t => 
+
+    const scheduledTask = tasks.find(t =>
       t.due_date === today &&
       t.scheduled_at === currentTime &&
       t.status !== 'DONE' &&
@@ -165,7 +165,7 @@ export default function App() {
       if (chronotype === 'EARLY_BIRD' && h >= 8 && h < 11) isGolden = true;
       if (chronotype === 'NIGHT_OWL' && h >= 20 && h < 22) isGolden = true;
       if (chronotype === 'THIRD_BIRD' && ((h >= 9 && h < 11) || (h >= 15 && h < 17))) isGolden = true;
-      
+
       if (isGolden) finalAmount *= 2;
     }
 
@@ -269,7 +269,7 @@ export default function App() {
       const nextScore = isNowDone
         ? Math.max(0, current - energyDelta)
         : Math.min(100, current + energyDelta);
-      
+
       localStorage.setItem('focusflow_energy', String(nextScore));
       return nextScore;
     });
@@ -286,12 +286,79 @@ export default function App() {
     });
 
     saveTasksToStorage(updated);
-    
+
     // Bio-Pet & CLI logic
     if (isNowDone) {
       updatePetXp(20, match.energy_level === 'HIGH');
       if (match.energy_level === 'HIGH') {
         updateCognitiveLoad(10);
+      }
+
+      // Check if it is a shadow step and if all siblings are now DONE (Victory Check)
+      if (match.isShadowStep && match.parentId) {
+        const siblings = updated.filter(t => t.parentId === match.parentId);
+        const allDone = siblings.length > 0 && siblings.every(t => t.status === 'DONE');
+        
+        if (allDone) {
+          // 1. Reward 50 Bio-XP
+          updatePetXp(50);
+
+          // 2. Unlock a random accessory not already unlocked
+          const allAccs = ['toy_sword', 'wooden_shield', 'hero_crown'];
+          const currentUnlocked = petState.unlockedAccessories || [];
+          const notUnlockedYet = allAccs.filter(acc => !currentUnlocked.includes(acc));
+          
+          let newlyUnlocked: string | null = null;
+          let newUnlockedList = [...currentUnlocked];
+          if (notUnlockedYet.length > 0) {
+            newlyUnlocked = notUnlockedYet[Math.floor(Math.random() * notUnlockedYet.length)];
+            newUnlockedList.push(newlyUnlocked);
+            
+            const nextPetState = {
+              ...petState,
+              unlockedAccessories: newUnlockedList
+            };
+            setPetState(nextPetState);
+            localStorage.setItem('focusflow_pet_state', JSON.stringify(nextPetState));
+          }
+
+          // 3. Play victory music arpeggio with Web Audio API
+          try {
+            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const playTone = (freq: number, start: number, duration: number) => {
+              const osc = audioCtx.createOscillator();
+              const gainNode = audioCtx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.value = freq;
+              gainNode.gain.setValueAtTime(0.15, start);
+              gainNode.gain.exponentialRampToValueAtTime(0.001, start + duration);
+              osc.connect(gainNode);
+              gainNode.connect(audioCtx.destination);
+              osc.start(start);
+              osc.stop(start + duration);
+            };
+            const now = audioCtx.currentTime;
+            playTone(523.25, now, 0.15); // C5
+            playTone(659.25, now + 0.15, 0.15); // E5
+            playTone(783.99, now + 0.3, 0.15); // G5
+            playTone(1046.50, now + 0.45, 0.4); // C6
+          } catch (e) {
+            console.error('Audio Context Error:', e);
+          }
+
+          // 4. Show modal alert celebration
+          setTimeout(() => {
+            const accNames: Record<string, string> = {
+              'toy_sword': 'Kiếm đồ chơi ⚔️',
+              'wooden_shield': 'Khiên gỗ 🛡️',
+              'hero_crown': 'Vương miện dũng sĩ 👑'
+            };
+            const accMessage = newlyUnlocked 
+              ? `\n🎁 Nhận được trang bị mới: ${accNames[newlyUnlocked]}! Hãy mở tủ đồ của linh vật để trang bị.`
+              : '\n(Bạn đã sở hữu toàn bộ trang bị dũng sĩ rồi!)';
+            alert(`🎉 CHIẾN THẮNG QUÁI VẬT BÓNG TỐI! 🎉\nBạn đã dọn dẹp sạch toàn bộ các mảnh vỡ trì hoãn!\n✨ Nhận thêm +50 Bio-XP cho linh vật.${accMessage}`);
+          }, 600);
+        }
       }
     }
   };
@@ -359,7 +426,7 @@ export default function App() {
     setIsSplittingTaskId(taskId);
     try {
       const microSteps = await splitTaskIntoMicroSteps(parentTask.title, parentTask.description);
-      
+
       if (microSteps.length > 0) {
         const newTasks: Task[] = microSteps.map((step, index) => ({
           id: `t-split-${Date.now()}-${index}`,
@@ -371,6 +438,8 @@ export default function App() {
           energy_level: step.energy_level,
           estimated_min: step.estimated_min,
           due_date: parentTask.due_date,
+          parentId: taskId,
+          isShadowStep: true,
         }));
 
         // Remove parent task and add new micro tasks
@@ -460,7 +529,7 @@ export default function App() {
   // Visible if NOT in Off Mode, AND either current Hour is after 17:00 (17:00 is min 1020) OR all active tasks are completed
   const isClosureActionAvailable = useMemo(() => {
     if (isOffMode) return false;
-    
+
     // Check current local hours
     const [h, m] = currentTime.split(':').map(Number);
     const minsCurrent = h * 60 + m;
@@ -489,7 +558,7 @@ export default function App() {
       if (catTasks.length >= 3 && !dismissedBatches.includes(cat)) {
         const totalDuration = catTasks.reduce((sum, t) => sum + (t.estimated_min || 25), 0);
         const proposedTime = findOptimalStartTime(tasks, totalDuration, chronotype, currentTime);
-        
+
         if (proposedTime) {
           return {
             category: cat as TaskCategory,
@@ -505,7 +574,7 @@ export default function App() {
 
   const handleApplyBatch = () => {
     if (!batchingSuggestion) return;
-    
+
     let currentMins = 0;
     const [pH, pM] = batchingSuggestion.proposedTime.split(':').map(Number);
     currentMins = pH * 60 + pM;
@@ -533,7 +602,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-gray-800 transition-colors duration-300">
-      
+
       {/* Focus Mode Overlay (PB-F6) */}
       {focusTask && (
         <FocusOverlay
@@ -562,7 +631,7 @@ export default function App() {
       {/* HEADER BAR */}
       <header className="bg-white border-b border-gray-100 py-3.5 px-6 sticky top-0 z-30 shadow-[0_2px_12px_rgba(0,0,0,0.01)]">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
-          
+
           {/* Logo brand pairing Space Grotesk */}
           <div className="flex items-center gap-2.5">
             <div className="w-8.5 h-8.5 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-200">
@@ -592,21 +661,19 @@ export default function App() {
           <nav className="flex items-center gap-1 p-1 bg-slate-100/80 rounded-xl">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                activeTab === 'dashboard'
+              className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${activeTab === 'dashboard'
                   ? 'bg-white text-indigo-600 shadow-xs'
                   : 'text-gray-500 hover:text-gray-800'
-              }`}
+                }`}
             >
               📆 Nhiệm Vụ & Lịch Trình
             </button>
             <button
               onClick={() => setActiveTab('growth')}
-              className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                activeTab === 'growth'
+              className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${activeTab === 'growth'
                   ? 'bg-white text-indigo-600 shadow-xs'
                   : 'text-gray-500 hover:text-gray-800'
-              }`}
+                }`}
             >
               📈 Tăng Trưởng Kỹ Năng
             </button>
@@ -617,13 +684,13 @@ export default function App() {
 
       {/* PRIMARY WORKSPACE */}
       <main className="max-w-7xl mx-auto px-6 py-6 transition-all duration-300">
-        
+
         {activeTab === 'dashboard' ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            
+
             {/* Left/Middle primary space : Task matric lists */}
             <div className="lg:col-span-2 space-y-6">
-              
+
               {/* Promo Banner introduction */}
               <div className="p-6 bg-white border border-gray-150 rounded-3xl relative overflow-hidden shadow-xs transition-transform hover:scale-[1.002]">
                 <div className="absolute right-0 top-0 w-32 h-32 bg-indigo-50 rounded-bl-full -z-10 opacity-60" />
@@ -708,7 +775,7 @@ export default function App() {
 
             {/* Right sidebar column: Active schedulers and energy budget */}
             <div className="lg:col-span-1 space-y-6">
-              
+
               {/* Energy bar tracker widget */}
               <EnergyBar
                 currentScore={energyScore}
@@ -781,11 +848,20 @@ export default function App() {
       />
 
       {/* Bio-Pet Widget */}
-      <BioPetWidget 
+      <BioPetWidget
         chronotype={chronotype}
         petState={petState}
         onRenamePet={handleRenamePet}
         onStartSurvey={() => setIsSurveyOpen(true)}
+        tasks={tasks}
+        onUpdateAccessories={(equipped) => {
+          const nextPetState = {
+            ...petState,
+            equippedAccessories: equipped
+          };
+          setPetState(nextPetState);
+          localStorage.setItem('focusflow_pet_state', JSON.stringify(nextPetState));
+        }}
       />
 
       {/* Footer credits block without tech larping or online metadata Indicators */}
