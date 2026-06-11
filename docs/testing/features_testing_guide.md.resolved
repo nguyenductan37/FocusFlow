@@ -1,0 +1,171 @@
+# Hướng Dẫn Kiểm Thử & Tổng Hợp Tính Năng (Từ 08/06 Đến Nay)
+
+Tài liệu này tổng hợp toàn bộ các tính năng đã được thực hiện trong dự án FocusFlow từ ngày 08/06/2026 đến ngày 11/06/2026 (Phiên bản từ 1.4.0 đến 1.8.0), kèm theo quy trình kiểm thử thủ công (Manual Testing) chi tiết cho từng phần.
+
+---
+
+## 1. Phiên bản 1.4.0 (08/06/2026)
+
+### 1.1 Tóm tắt tính năng
+1. **Trợ lý thêm công việc thông minh bằng AI (AI Command Bar):**
+   * Người dùng có thể nhập câu lệnh bằng ngôn ngữ tự nhiên (tiếng Việt), AI sẽ tự động phân tích và điền sẵn các trường: tiêu đề (`title`), thời lượng (`duration`), mức độ ưu tiên (`priority`), danh mục (`category`), và giờ hẹn cụ thể (`scheduled_at`).
+   * Sử dụng Structured Outputs thông qua JSON Schema để đảm bảo độ tin cậy của dữ liệu trả về từ Gemini API.
+2. **Hệ thống chống dồn ứ công việc (Anti-Doom-Pile):**
+   * Theo dõi số lần hoãn task (`postpone_count`). Nếu task bị hoãn $\ge 3$ lần, thẻ cảnh báo màu cam và nút **"🧩 Rã nhỏ bước hành động"** sẽ hiển thị.
+   * Khi bấm nút, Gemini API được gọi để chia nhỏ task hiện tại thành 2-3 tác vụ siêu nhỏ (5-15 phút, mức năng lượng LOW/MEDIUM).
+   * Yêu cầu nhập lý do trì hoãn và lưu trữ trong mảng `postpone_reasons`.
+
+### 1.2 Hướng dẫn kiểm thử (Test Cases)
+
+#### Test Case 1: Thêm việc bằng ngôn ngữ tự nhiên
+* **Các bước thực hiện:**
+  1. Mở ô nhập lệnh AI Command Bar (thường ở đầu danh sách nhiệm vụ).
+  2. Nhập câu lệnh: *"Họp phòng Marketing lúc 2h chiều trong 60 phút ưu tiên cao"* và nhấn Enter.
+* **Kết quả kỳ vọng:**
+  * Hệ thống tự động tạo mới một task với tiêu đề là "Họp phòng Marketing".
+  * Thời gian bắt đầu được đặt là `14:00` cùng ngày.
+  * Thời lượng là `60` phút.
+  * Mức độ ưu tiên là `HIGH` (Đỏ/Eisenhower Q1 hoặc Q2).
+
+#### Test Case 2: Kích hoạt Anti-Doom-Pile và rã nhỏ task
+* **Các bước thực hiện:**
+  1. Chọn một task bất kỳ và bấm sửa hoặc hoãn task 3 lần liên tiếp (hoặc giả lập tăng trường `postpone_count` trong state/localStorage lên `3`).
+  2. Quan sát trên giao diện xem task đó có xuất hiện viền cảnh báo màu cam kèm nhãn "Trì hoãn nhiều lần" và nút **"🧩 Rã nhỏ bước hành động"** không.
+  3. Bấm vào nút **"🧩 Rã nhỏ bước hành động"**.
+* **Kết quả kỳ vọng:**
+  * Hệ thống hiển thị trạng thái đang tải (Loading), gọi API Gemini thành công.
+  * Task gốc được phân tách thành các task con (sub-tasks) có thời lượng ngắn (5-15 phút) và hiển thị thụt lề dưới task gốc, hoặc tạo thành danh sách Checklist rõ ràng.
+
+---
+
+## 2. Phiên bản 1.5.0 (09/06/2026)
+
+### 2.1 Tóm tắt tính năng
+1. **Khảo sát Nhịp sinh học (Chronotype Survey) & Đồ thị Năng lượng:**
+   * Cung cấp bài trắc nghiệm MEQ rút gọn gồm 3 câu hỏi để xác định Chronotype của người dùng: Sơn Ca (Early Bird), Cú Đêm (Night Owl), hoặc Bồ Câu (Third Bird).
+   * Hiển thị biểu đồ hình sin SVG trực quan hóa năng lượng sinh học trong vòng 24 giờ của Chronotype tương ứng.
+2. **Hệ thống Gợi ý Lịch trình Thông minh (Smart Scheduler Nudges):**
+   * Tự động phát hiện nếu một task yêu cầu năng lượng cao (`HIGH energy`) hoặc thuộc nhóm ưu tiên `Q1/Q2` đang được xếp lịch ngoài khung giờ vàng sinh học.
+   * Hiển thị banner đề xuất chuyển lịch về khung giờ lý tưởng kèm nút **"Chuyển lịch"** 1-click.
+3. **Trích xuất AI tối ưu theo Chronotype:**
+   * Khi tạo task bằng AI mà không gán giờ cụ thể, hệ thống sẽ tự động phân phối giờ bắt đầu vào khung giờ vàng của người dùng.
+
+### 2.2 Hướng dẫn kiểm thử (Test Cases)
+
+#### Test Case 1: Khảo sát và hiển thị đồ thị năng lượng
+* **Các bước thực hiện:**
+  1. Reset ứng dụng (hoặc xóa localStorage) để hiển thị trạng thái Trứng sinh học.
+  2. Bấm vào quả trứng để mở modal trắc nghiệm MEQ. Trả lời các câu hỏi để hệ thống phân loại nhóm sinh học (ví dụ: Cú Đêm).
+* **Kết quả kỳ vọng:**
+  * Sau khi hoàn thành, quả trứng sẽ nở ra biểu tượng con Cú xanh lam đại diện cho nhóm Cú Đêm.
+  * Góc đồ thị năng lượng 24h hiển thị đường cong sin có đỉnh năng lượng cao nhất nằm ở khung giờ tối (20:00 - 22:00).
+
+#### Test Case 2: Cảnh báo xếp lịch sai giờ vàng
+* **Các bước thực hiện:**
+  1. Tạo một task có mức năng lượng `HIGH` và độ ưu tiên `Q1`.
+  2. Kéo thả hoặc sửa giờ bắt đầu của task này vào khung giờ trưa (12:00 - 13:00 - lúc này năng lượng của đa số Chronotype xuống thấp).
+* **Kết quả kỳ vọng:**
+  * Banner cảnh báo màu vàng xuất hiện với nội dung: *"Tác vụ năng lượng cao xếp ngoài giờ vàng. Bạn có muốn dời lịch?"*.
+  * Bấm nút **"Chuyển lịch"** sẽ tự động cập nhật thời gian bắt đầu của task về khung giờ vàng (ví dụ: 08:30 sáng đối với Sơn Ca).
+
+---
+
+## 3. Phiên bản 1.6.0 (10/06/2026)
+
+### 3.1 Tóm tắt tính năng
+1. **Dự báo Quá tải Nhận thức (Cognitive Overload Predictor):**
+   * Chỉ số CLI (Cognitive Load Index) biểu diễn từ 0% đến 100%. CLI tăng khi làm việc liên tục (Pomodoro), hoàn thành task nặng, hoặc hoãn task. CLI giảm khi bấm **Take Break** (-20%) hoặc kết thúc ngày (EOD).
+2. **Sinh Vật Nhịp Sinh Học (Bio-Companion):**
+   * Hệ thống thú cưng ảo (Sơn Ca, Bồ Câu, Cú Đêm) tương tác trực tiếp với hành vi của người dùng.
+   * Điểm Bio-XP giúp thú cưng thăng cấp. Trạng thái Pet thay đổi động: Nhảy nhót (Active) khi người dùng tập trung trong giờ vàng, mệt mỏi ngủ khò (Fatigued) khi làm việc quá khuya.
+3. **Sắp xếp thông minh theo Cụm bối cảnh (Smart Category Batching):**
+   * Phát hiện nếu có $\ge 3$ task cùng danh mục chưa hoàn thành và gợi ý gom lịch vào một khung thời gian trống thích hợp.
+
+### 3.2 Hướng dẫn kiểm thử (Test Cases)
+
+#### Test Case 1: Tăng giảm CLI & Phản ứng của Thú cưng
+* **Các bước thực hiện:**
+  1. Bắt đầu một phiên Pomodoro hoặc bấm hoàn thành một task có nhãn năng lượng `HIGH`.
+  2. Kiểm tra thanh CLI trong phần thông số năng lượng.
+  3. Bấm nút **"Take Break"** hoặc chờ phiên Pomodoro kết thúc để nghỉ ngơi.
+* **Kết quả kỳ vọng:**
+  * Chỉ số CLI tăng lên sau các hoạt động căng thẳng. Khi CLI $\ge 80\%$, thanh đo nhấp nháy đỏ và hiển thị cảnh báo quá tải nhận thức.
+  * Thú cưng chuyển sang trạng thái "Fatigued" (Mệt mỏi) nếu CLI quá cao hoặc làm việc ngoài giờ sinh học. Sau khi bấm "Take Break", chỉ số CLI giảm 20% và thú cưng hồi phục trạng thái thư giãn.
+
+#### Test Case 2: Gom lịch thông minh (Smart Batching)
+* **Các bước thực hiện:**
+  1. Tạo 3 task cùng thuộc danh mục `Học tập` (chưa hoàn thành và chưa xếp lịch cụ thể).
+* **Kết quả kỳ vọng:**
+  * Một banner đề xuất gom lịch (Smart Batching) xuất hiện: *"Phát hiện 3 task Học tập chưa xếp lịch. Gom lịch ngay lúc 14:00?"*.
+  * Bấm **"Đồng ý"**: Cả 3 task tự động được xếp giờ nối tiếp nhau bắt đầu từ mốc 14:00 (ví dụ: Task 1: 14:00 - 14:30, Task 2: 14:30 - 15:00, Task 3: 15:00 - 15:30).
+
+---
+
+## 4. Phiên bản 1.7.0 (11/06/2026)
+
+### 4.1 Tóm tắt tính năng
+1. **Hệ thống Tiêu diệt Task Bóng Tối (Slay the Shadow Tasks):**
+   * Khi rã nhỏ một task trì hoãn, các task con được đánh dấu là `isShadowStep: true` (Mảnh vỡ bóng tối).
+   * Hiển thị giao diện đặc biệt: Viền tím nhấp nháy phát sáng, nhãn dán tím `👾 Mảnh vỡ bóng tối` và biểu tượng thanh kiếm chéo `⚔️`.
+   * Banner bao vây quái vật hiển thị tiến trình hoàn thành các mảnh vỡ.
+   * Khi hoàn thành mảnh vỡ cuối cùng: Cộng $+50$ Bio-XP, mở khóa ngẫu nhiên trang bị (Kiếm, Khiên, Vương miện), và phát nhạc chiến thắng (Victory sound arpeggio).
+2. **Trang bị dũng sĩ & Tủ đồ Linh vật (Pet Gear & Closet):**
+   * Khi có mảnh vỡ bóng tối đang hoạt động, thú cưng chuyển sang trạng thái chiến đấu (Battle Mode): mắt tập trung nghiêm túc, hào quang phát sáng tím nhấp nháy, thoại bong bóng dũng mãnh.
+   * Khu vực trang bị trong Popover linh vật cho phép người dùng click "Trang bị" hoặc "Tháo ra" các phụ kiện kiếm, khiên, vương miện đã mở khóa. Các phụ kiện SVG được vẽ khớp động đè lên linh vật.
+
+### 4.2 Hướng dẫn kiểm thử (Test Cases)
+
+#### Test Case 1: Chiến đấu và hoàn thành Mảnh vỡ bóng tối
+* **Các bước thực hiện:**
+  1. Bấm rã nhỏ một task trì hoãn nhiều lần để tạo ra các mảnh vỡ bóng tối.
+  2. Xác nhận xem thú cưng có tự động đổi diện mạo chiến đấu (lông mày xếch, hào quang tím) không.
+  3. Bấm hoàn thành lần lượt các mảnh vỡ bóng tối đó cho đến mảnh cuối cùng.
+* **Kết quả kỳ vọng:**
+  * Banner màu tím hiển thị chính xác tiến độ (ví dụ: `👾 Đang bao vây Quái vật bóng tối — Tiến độ: 2/3 mảnh`).
+  * Khi hoàn thành mảnh thứ 3 (mảnh cuối):
+    * Trình duyệt phát ra âm thanh chúc mừng chiến thắng.
+    * Thú cưng được cộng 50 Bio-XP (nếu đủ điểm sẽ tăng cấp).
+    * Nhận được thông báo mở khóa trang bị mới (Kiếm đồ chơi/Khiên gỗ/Vương miện dũng sĩ).
+
+#### Test Case 2: Trang bị phụ kiện cho Linh vật
+* **Các bước thực hiện:**
+  1. Sau khi mở khóa trang bị từ bước trước, bấm vào Linh vật để mở Popover thông số chi tiết.
+  2. Tìm khu vực **"⚔️ Trang bị dũng sĩ"**.
+  3. Bấm nút **"Trang bị"** bên cạnh phụ kiện bạn muốn.
+* **Kết quả kỳ vọng:**
+  * Hình ảnh SVG của phụ kiện được vẽ chính xác lên cơ thể linh vật tương ứng (Sơn Ca, Cú Đêm, hoặc Bồ Câu) mà không bị lệch vị trí.
+  * Bấm **"Tháo ra"** sẽ ẩn phụ kiện đó đi ngay lập tức.
+
+---
+
+## 5. Phiên bản 1.8.0 (Hôm nay - 11/06/2026)
+
+### 5.1 Tóm tắt tính năng
+1. **Tự Động Xếp Lịch Thông Minh (Smart Slot-Scheduling Nudge):**
+   * Thay thế cơ chế tạo mới task học tập truyền thống khi phát hiện khe trống lịch trình.
+   * **Thuật toán chấm điểm phối hợp (Hybrid Scoring System):** Lọc tất cả các task chưa xếp lịch của ngày hôm nay (`!scheduled_at`, `due_date === today`, trạng thái khác `DONE`/`DEFERRED`) thuộc mọi danh mục. Chấm điểm theo công thức:
+     * *Độ khớp thời lượng (50%):* $\le$ độ dài slot nhận $+50$đ, $>$ slot trừ $-20$đ.
+     * *Eisenhower Priority (30%):* $Q1 = +40$đ, $Q2 = +35$đ, $Q3 = +20$đ, $Q4 = +10$đ.
+     * *Đồng điệu nhịp sinh học (20%):* Trong giờ vàng ưu tiên task HIGH energy ($+30$đ); ngoài giờ vàng ưu tiên task LOW energy ($+30$đ).
+   * **Giao diện Dropdown & Xếp lịch tức thời:** Hiển thị task có điểm số cao nhất cùng menu Dropdown để chuyển đổi nhanh sang các task tương thích khác. Bấm **"Xếp lịch ngay"** sẽ gán trực tiếp mốc giờ trống đó cho task mà không cần mở modal chỉnh sửa.
+   * **Cơ chế ẩn thông minh (Dynamic Dismiss):** Bấm **"Bỏ qua"** sẽ ghi nhớ mốc giờ của slot bị bỏ qua và ẩn thẻ gợi ý riêng cho slot đó. Nếu có thay đổi lịch trình tạo ra slot trống mới ở khung giờ khác, thẻ gợi ý xếp lịch sẽ tự động hiển thị lại.
+   * **Chế độ dự phòng (Fallback):** Nếu không còn task chưa xếp lịch nào, hệ thống gợi ý tạo mới một task học tập để tối ưu hóa thời gian.
+
+### 5.2 Hướng dẫn kiểm thử (Test Cases)
+
+#### Test Case 1: Gợi ý xếp lịch thông minh từ các task có sẵn
+* **Các bước thực hiện:**
+  1. Tạo ít nhất 2 task chưa xếp lịch trong ngày hôm nay (1 task `Làm việc` Q1 độ dài 30 phút, 1 task `Admin` Q4 độ dài 60 phút).
+  2. Tạo một khoảng trống thời gian dài 45 phút trên thời khóa biểu của ngày hôm nay.
+* **Kết quả kỳ vọng:**
+  * Thẻ gợi ý "Gợi ý xếp lịch thông minh" xuất hiện chỉ ra slot trống.
+  * Task `Làm việc` (Q1, 30 phút) có điểm số cao hơn nhờ khớp thời lượng và độ ưu tiên Eisenhower cao sẽ được chọn mặc định.
+  * Nhấp vào dropdown chọn task khác, danh sách sẽ hiển thị cả task `Admin`.
+
+#### Test Case 2: Thao tác xếp lịch tức thì và bỏ qua
+* **Các bước thực hiện:**
+  1. Tiếp tục từ Test Case 1, bấm chọn một task trong dropdown và nhấn nút **"Xếp lịch ngay"**.
+  2. Tạo một khe trống khác trên lịch trình. Khi thẻ gợi ý xuất hiện lại, bấm nút **"Bỏ qua"**.
+* **Kết quả kỳ vọng:**
+  * Bấm **"Xếp lịch ngay"** sẽ di chuyển task được chọn thẳng vào khe thời gian trống trên timeline, thẻ gợi ý biến mất và lịch trình cập nhật tức thì.
+  * Bấm **"Bỏ qua"** sẽ ẩn thẻ gợi ý cho riêng khe giờ đó. Nếu bạn dịch chuyển một task khác để tạo ra một khe trống ở mốc giờ mới, thẻ gợi ý sẽ tự động hiện lại để hỗ trợ sắp xếp.
