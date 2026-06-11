@@ -855,6 +855,7 @@ export default function App() {
         onRenamePet={handleRenamePet}
         onStartSurvey={() => setIsSurveyOpen(true)}
         tasks={tasks}
+        cognitiveLoad={cognitiveLoad}
         onUpdateAccessories={(equipped) => {
           const nextPetState = {
             ...petState,

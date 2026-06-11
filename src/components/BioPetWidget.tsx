@@ -9,6 +9,7 @@ interface BioPetWidgetProps {
   onStartSurvey: () => void;
   tasks: Task[];
   onUpdateAccessories: (equipped: string[]) => void;
+  cognitiveLoad: number;
 }
 
 export default function BioPetWidget({ 
@@ -17,7 +18,8 @@ export default function BioPetWidget({
   onRenamePet, 
   onStartSurvey,
   tasks,
-  onUpdateAccessories 
+  onUpdateAccessories,
+  cognitiveLoad
 }: BioPetWidgetProps) {
   const [showPopover, setShowPopover] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -28,15 +30,25 @@ export default function BioPetWidget({
   // Check if there are active shadow steps
   const hasActiveShadowSteps = tasks?.some(t => t.isShadowStep && t.status !== 'DONE') || false;
 
+  // Áp đặt trạng thái mệt mỏi ngay lập tức nếu Tải nhận thức >= 80 (Derived state an toàn hơn)
+  const isCurrentlyFatigued = isFatigued || cognitiveLoad >= 80;
+
   // Sync pet name
   useEffect(() => {
     setTempName(petState.name || 'Linh Vật');
   }, [petState.name]);
 
-  // Check fatigue status based on time
+  // Check fatigue status based on time or high cognitive load
   useEffect(() => {
     const checkFatigue = () => {
       if (!chronotype) return;
+      
+      // Quá tải nhận thức -> Thú cưng mệt mỏi ngay lập tức
+      if (cognitiveLoad >= 80) {
+        setIsFatigued(true);
+        return;
+      }
+
       const now = new Date();
       const h = now.getHours();
       
@@ -54,7 +66,7 @@ export default function BioPetWidget({
     checkFatigue();
     const interval = setInterval(checkFatigue, 60000); // Check every minute
     return () => clearInterval(interval);
-  }, [chronotype]);
+  }, [chronotype, cognitiveLoad]);
 
   const handleRenameSubmit = () => {
     if (tempName.trim()) {
@@ -83,7 +95,7 @@ export default function BioPetWidget({
           'Hãy cùng dọn dẹp các mảnh vỡ bóng tối!'
         ];
         setSpeechBubble(phrases[Math.floor(Math.random() * phrases.length)]);
-      } else if (isFatigued) {
+      } else if (isCurrentlyFatigued) {
         const phrases = ['Tôi buồn ngủ quá...', 'Zzz... Khò khò...', 'Bạn đã nghỉ ngơi chưa?'];
         setSpeechBubble(phrases[Math.floor(Math.random() * phrases.length)]);
       } else {
@@ -114,7 +126,7 @@ export default function BioPetWidget({
   const renderEarlyBird = () => {
     const isEquipped = (accId: string) => petState.equippedAccessories?.includes(accId);
     return (
-      <svg viewBox="0 0 100 100" className={`w-16 h-16 ${isFatigued ? 'opacity-80' : 'animate-bounce-subtle'}`}>
+      <svg viewBox="0 0 100 100" className={`w-16 h-16 ${isCurrentlyFatigued ? 'opacity-80' : 'animate-bounce-subtle'}`}>
         {/* Body */}
         <circle cx="50" cy="60" r="30" fill="#FDE047" />
         {/* Wings */}
@@ -128,7 +140,7 @@ export default function BioPetWidget({
             <circle cx="40" cy="52" r="4" fill="#854D0E" />
             <circle cx="60" cy="52" r="4" fill="#854D0E" />
           </>
-        ) : isFatigued ? (
+        ) : isCurrentlyFatigued ? (
           <>
             <path d="M 35 50 Q 40 45 45 50" fill="none" stroke="#854D0E" strokeWidth="3" strokeLinecap="round" />
             <path d="M 55 50 Q 60 45 65 50" fill="none" stroke="#854D0E" strokeWidth="3" strokeLinecap="round" />
@@ -173,7 +185,7 @@ export default function BioPetWidget({
   const renderNightOwl = () => {
     const isEquipped = (accId: string) => petState.equippedAccessories?.includes(accId);
     return (
-      <svg viewBox="0 0 100 100" className={`w-16 h-16 ${isFatigued ? 'opacity-80' : 'animate-pulse'}`}>
+      <svg viewBox="0 0 100 100" className={`w-16 h-16 ${isCurrentlyFatigued ? 'opacity-80' : 'animate-pulse'}`}>
         {/* Body */}
         <path d="M 20 80 C 20 30 80 30 80 80 Z" fill="#6366F1" />
         {/* Ears */}
@@ -189,7 +201,7 @@ export default function BioPetWidget({
             <circle cx="35" cy="55" r="5" fill="#312E81" />
             <circle cx="65" cy="55" r="5" fill="#312E81" />
           </>
-        ) : isFatigued ? (
+        ) : isCurrentlyFatigued ? (
           <>
             <path d="M 28 55 H 42" stroke="#312E81" strokeWidth="4" strokeLinecap="round" />
             <path d="M 58 55 H 72" stroke="#312E81" strokeWidth="4" strokeLinecap="round" />
@@ -234,7 +246,7 @@ export default function BioPetWidget({
   const renderThirdBird = () => {
     const isEquipped = (accId: string) => petState.equippedAccessories?.includes(accId);
     return (
-      <svg viewBox="0 0 100 100" className={`w-16 h-16 ${isFatigued ? 'opacity-80' : ''}`} style={{ transform: isFatigued ? 'none' : 'rotate(5deg)' }}>
+      <svg viewBox="0 0 100 100" className={`w-16 h-16 ${isCurrentlyFatigued ? 'opacity-80' : ''}`} style={{ transform: isCurrentlyFatigued ? 'none' : 'rotate(5deg)' }}>
         {/* Body */}
         <ellipse cx="50" cy="65" rx="25" ry="30" fill="#86EFAC" />
         {/* Head */}
@@ -247,7 +259,7 @@ export default function BioPetWidget({
             <circle cx="42" cy="32" r="3" fill="#14532D" />
             <circle cx="62" cy="32" r="3" fill="#14532D" />
           </>
-        ) : isFatigued ? (
+        ) : isCurrentlyFatigued ? (
           <>
             <path d="M 40 32 H 48" stroke="#14532D" strokeWidth="3" strokeLinecap="round" />
             <path d="M 58 32 H 66" stroke="#14532D" strokeWidth="3" strokeLinecap="round" />
@@ -348,7 +360,7 @@ export default function BioPetWidget({
             </div>
 
             <div className="pt-2 border-t border-slate-100 text-xs">
-              {isFatigued ? (
+              {isCurrentlyFatigued ? (
                 <div className="flex items-center gap-1.5 text-amber-600 font-medium">
                   <Moon className="w-3.5 h-3.5" />
                   <span>Cần nghỉ ngơi</span>
@@ -416,7 +428,7 @@ export default function BioPetWidget({
         onMouseEnter={handlePetHover}
         onMouseLeave={handlePetLeave}
       >
-        {isFatigued && (
+        {isCurrentlyFatigued && (
           <div className="absolute -top-2 right-1 text-slate-400 animate-fade-out-up">
             <Moon className="w-4 h-4" />
           </div>

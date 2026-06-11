@@ -48,7 +48,7 @@ export default function AIParsingBar({ chronotype, onTaskCreated }: AIParsingBar
       // Reset UI & hiện Toast nhỏ
       setInputText('');
       setSuccessMsg(`Đã tạo: "${parsedTask.title}"`);
-      
+
       // Ẩn success msg sau 4 giây
       setTimeout(() => {
         setSuccessMsg(null);
@@ -70,9 +70,9 @@ export default function AIParsingBar({ chronotype, onTaskCreated }: AIParsingBar
     <div className="w-full bg-white border border-indigo-100 rounded-3xl p-4 shadow-sm relative overflow-hidden transition-all duration-300">
       {/* Background Gradient for aesthetic */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/50 rounded-bl-full -z-10 pointer-events-none" />
-      
+
       <div className="flex flex-col gap-3">
-        <form 
+        <form
           onSubmit={handleSubmit}
           className="relative flex items-center w-full"
         >
